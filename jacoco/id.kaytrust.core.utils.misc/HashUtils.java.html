@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HashUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.misc</a> &gt; <span class="el_source">HashUtils.java</span></div><h1>HashUtils.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.misc;
+
+import org.bouncycastle.jcajce.provider.digest.Keccak;
+import org.bouncycastle.jcajce.provider.digest.SHA256;
+import org.bouncycastle.jcajce.provider.digest.SHA3;
+import org.bouncycastle.jcajce.provider.digest.SHA3.DigestSHA3;
+import org.web3j.utils.Numeric;
+
+public class HashUtils {
+
+<span class="nc" id="L11">	HashUtils(){}</span>
+	
+	public static byte[] bytesTosha3(byte[] bytes) {
+<span class="fc" id="L14">		DigestSHA3 sha3256 = new SHA3.Digest256();</span>
+<span class="fc" id="L15">		sha3256.update(bytes);</span>
+<span class="fc" id="L16">		return sha3256.digest();</span>
+	}
+	
+	public static byte[] bytesTosha256(byte[] bytes) {
+<span class="fc" id="L20">		SHA256.Digest sha256 = new SHA256.Digest();</span>
+<span class="fc" id="L21">		sha256.update(bytes);</span>
+<span class="fc" id="L22">		return sha256.digest();</span>
+	}
+	
+	public static byte[] bytesToKeccak(byte[] bytes) {
+<span class="fc" id="L26">		Keccak.DigestKeccak kecc = new Keccak.Digest256();</span>
+<span class="fc" id="L27">		kecc.update(bytes);</span>
+<span class="fc" id="L28">		return kecc.digest();</span>
+	}
+	
+	public static String convetStringToHashKeccakHex(String secret) {
+<span class="fc" id="L32">		byte[] cipher = bytesToKeccak(secret.getBytes()); </span>
+<span class="fc" id="L33">		return Numeric.toHexString(cipher);</span>
+	}
+	
+	public static String convetStringToHashKeccakHex(byte[] bytes) {
+<span class="nc" id="L37">		byte[] cipher = bytesToKeccak(bytes);</span>
+<span class="nc" id="L38">		return Numeric.toHexString(cipher);</span>
+	}
+	
+	public static String convetStringToHash3(byte[] bytes) {
+<span class="nc" id="L42">		byte[] cipher = bytesTosha3(bytes);</span>
+<span class="nc" id="L43">		return Numeric.toHexString(cipher);</span>
+	}
+	
+	public static String convetStringToHash256(byte[] bytes) {
+<span class="fc" id="L47">		byte[] cipher = bytesTosha256(bytes);</span>
+<span class="fc" id="L48">		return Numeric.toHexString(cipher);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

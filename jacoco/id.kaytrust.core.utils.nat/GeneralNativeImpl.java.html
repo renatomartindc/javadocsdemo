@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GeneralNativeImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.nat</a> &gt; <span class="el_source">GeneralNativeImpl.java</span></div><h1>GeneralNativeImpl.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.nat;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.response.EthGasPrice;
+import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
+import org.web3j.utils.Strings;
+
+import id.kaytrust.core.utils.misc.EthCoreUtils;
+import id.kaytrust.core.utils.nat.lib.HttpService;
+
+public class GeneralNativeImpl implements GeneralNative {
+
+    private Web3j web3j;
+
+<span class="fc" id="L22">    public GeneralNativeImpl(String host, String token) {</span>
+<span class="fc" id="L23">        HttpService httpService = new HttpService(host);</span>
+<span class="pc bpc" id="L24" title="1 of 2 branches missed.">        if (!Strings.isEmpty(token)) {</span>
+<span class="fc" id="L25">            Map&lt;String, String&gt; header = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L26">            header.put(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L27">            httpService.addHeaders(header);</span>
+        }
+<span class="fc" id="L29">        web3j = Web3j.build(httpService);</span>
+<span class="fc" id="L30">    }</span>
+
+    @Override
+    public String getVersion() throws IOException {
+<span class="fc" id="L34">        return EthCoreUtils.getNetVersion(web3j);</span>
+    }
+
+    @Override
+    public BigInteger getGasPrice() throws IOException {
+<span class="fc" id="L39">        EthGasPrice ethGasPrice = web3j.ethGasPrice().send();</span>
+<span class="fc" id="L40">		return ethGasPrice.getGasPrice();</span>
+	 
+    }
+
+    @Override
+    public BigInteger getNonce(String addressAccount) throws InterruptedException, ExecutionException  {
+<span class="fc" id="L46">		EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(addressAccount, DefaultBlockParameterName.LATEST).sendAsync().get();</span>
+<span class="fc" id="L47">		return ethGetTransactionCount.getTransactionCount();</span>
+	}
+
+    @Override
+    public void shutdown() {
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        if (web3j != null)</span>
+<span class="fc" id="L53">            web3j.shutdown();</span>
+
+<span class="fc" id="L55">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

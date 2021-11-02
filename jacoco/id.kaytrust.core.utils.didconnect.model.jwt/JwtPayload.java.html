@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtPayload.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.didconnect.model.jwt</a> &gt; <span class="el_source">JwtPayload.java</span></div><h1>JwtPayload.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.didconnect.model.jwt;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+<span class="fc" id="L7">@Setter</span>
+<span class="fc" id="L8">public class JwtPayload &lt;T&gt;{</span>
+	/*
+	 * The &quot;sub&quot; (subject) claim identifies the principal that is the subject of the
+	 * JWT
+	 */
+<span class="fc" id="L13">	private String sub;</span>
+	
+	/* The &quot;iss&quot; (issuer) claim identifies the principal that issued the JWT */
+<span class="fc" id="L16">	private String iss;</span>
+	
+	/*
+	 * The &quot;iat&quot; (issued at) claim identifies the time at which the JWT was issued
+	 */
+<span class="nc" id="L21">	private long iat;</span>
+	
+	/*
+	 * The &quot;exp&quot; (expiration time) claim identifies the expiration time on or after
+	 * which the JWT MUST NOT be accepted for processing
+	 */
+<span class="fc" id="L27">	private long exp;</span>
+
+	/*
+	 * The &quot;aud&quot; (audience) claim identifies the recipients that the JWT is intended
+	 * for
+	 */
+<span class="fc" id="L33">	private String aud;</span>
+
+	/* Data to shared */
+<span class="nc" id="L36">	private T presentation;</span>
+	
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

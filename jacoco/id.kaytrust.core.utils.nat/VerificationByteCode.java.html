@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VerificationByteCode.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.nat</a> &gt; <span class="el_source">VerificationByteCode.java</span></div><h1>VerificationByteCode.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.nat;
+
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
+
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.generated.Bytes32;
+import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.utils.Numeric;
+
+import id.kaytrust.core.utils.misc.HashUtils;
+import lombok.extern.slf4j.Slf4j;
+<span class="fc" id="L17">@Slf4j</span>
+public class VerificationByteCode {
+    private static final String FUNC_VERIFY = &quot;verify&quot;;
+    private static final String FUNC_VERIFICATIONS = &quot;verifications&quot;;
+    private static final String FUNC_REVOKE = &quot;revoke&quot;;
+
+    private VerificationByteCode() {
+    }
+
+    public static String getRevoke(String credential) {
+<span class="fc" id="L27">        log.info(&quot;getRevoke.VC:\n{}&quot;, credential);</span>
+<span class="fc" id="L28">        byte[] bytes = HashUtils.bytesTosha256(credential.getBytes());</span>
+<span class="fc" id="L29">        log.info(&quot;getRevoke.VC.HASHING: {}&quot;, HashUtils.convetStringToHash256(bytes));</span>
+
+<span class="fc" id="L31">        final Function function = new Function(FUNC_REVOKE,</span>
+<span class="fc" id="L32">                Arrays.asList(new Bytes32(bytes)), Collections.emptyList());</span>
+
+<span class="fc" id="L34">        return FunctionEncoder.encode(function);</span>
+    }
+
+    public static String getVerify(String credential, BigInteger validDays) {
+<span class="fc" id="L38">        log.info(&quot;getVerify.VC:\n{}&quot;, credential);</span>
+<span class="fc" id="L39">        byte[] bytes = HashUtils.bytesTosha256(credential.getBytes());</span>
+<span class="fc" id="L40">        log.info(&quot;getVerify.VC.HASHING: {}&quot;, HashUtils.convetStringToHash256(bytes));</span>
+<span class="fc" id="L41">        final Function function = new Function(FUNC_VERIFY,</span>
+<span class="fc" id="L42">                Arrays.asList(new Bytes32(bytes), new Uint256(validDays)),</span>
+<span class="fc" id="L43">                Collections.emptyList());</span>
+<span class="fc" id="L44">        return FunctionEncoder.encode(function);</span>
+
+    }
+
+    public static Function getVerifications(String credential, String identity) {
+<span class="fc" id="L49">        log.info(&quot;getVerifications.VC:\n{}&quot;, credential);</span>
+<span class="fc" id="L50">        byte[] bytes = HashUtils.bytesTosha256(credential.getBytes());</span>
+<span class="fc" id="L51">        log.info(&quot;getVerifications.VC.HASHING: \n{}&quot;, Numeric.toHexString(bytes));</span>
+
+<span class="fc" id="L53">       return new Function(FUNC_VERIFICATIONS, </span>
+<span class="fc" id="L54">                Arrays.asList(new Bytes32(bytes), </span>
+                new Address(160, identity)), 
+<span class="fc" id="L56">                Arrays.asList(new TypeReference&lt;Uint256&gt;() {}, new TypeReference&lt;Uint256&gt;() {}));</span>
+                 
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EthereumIdentityManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.identity.ethereum.admin</a> &gt; <span class="el_source">EthereumIdentityManager.java</span></div><h1>EthereumIdentityManager.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.identity.ethereum.admin;
+
+import id.kaytrust.core.identity.base.IdentityManager;
+import id.kaytrust.core.utils.exception.ParamEmptyException;
+
+/**
+ * The Generic Identity Manager interface with capabilities to create identities
+ * and authorize devices. This interface is compliant with any ethereum network.
+ */
+public interface EthereumIdentityManager extends IdentityManager {
+	/**
+	 * Sets an instance to interact with the Identity Manager ethereum smart
+	 * contract.
+	 * 
+	 * @param hostRpc         host and port where ethereum node serves RPC requests
+	 * @param token           can be blank, is token field Authorization
+	 * @param privateKey      The private key used to interact with the smart
+	 *                        contract.
+	 * @param contractAddress Contract Address where the Smart contract lives.
+	 * @return instance of EthereumIdentityManager
+	 * @throws ParamEmptyException      if a required parameter is empty.
+	 */
+	static EthereumIdentityManager instance(String hostRpc, String token, String privateKey, String contractAddress) throws ParamEmptyException {
+<span class="nc" id="L24">		return new EthereumIdentityManagerImpl(hostRpc, token, privateKey, contractAddress);</span>
+	}
+	
+	/**
+	 * Sets an instance to interact with the Identity Manager ethereum smart
+	 * contract.
+	 * 
+	 * @param hostRpc         host and port where ethereum node serves RPC requests
+	 * @param token           can be blank, is token field Authorization
+	 * @param privateKey      The private key used to interact with the smart
+	 *                        contract.
+	 * @param contractAddress Contract Address Identity Manager.
+	 * @param blockTime 	  time mining of block in milliseconds, it's optional by default it's 15000
+	 * @throws ParamEmptyException if a required parameter is empty.
+	 */
+	static EthereumIdentityManager instance(String hostRpc, String token, String privateKey, String contractAddress, int blockTime) throws ParamEmptyException {
+<span class="fc" id="L40">		return new EthereumIdentityManagerImpl(hostRpc, token, privateKey, contractAddress, blockTime);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

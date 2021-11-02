@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EthereumAttestationSmartContractBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.proof</a> &gt; <span class="el_source">EthereumAttestationSmartContractBuilder.java</span></div><h1>EthereumAttestationSmartContractBuilder.java</h1><pre class="source lang-java linenums">package id.kaytrust.proof;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.List;
+
+import com.google.gson.GsonBuilder;
+
+import org.web3j.protocol.exceptions.TransactionException;
+
+import id.kaytrust.core.utils.exception.CapabilityException;
+import id.kaytrust.core.utils.exception.MnidInvalidAddressException;
+import id.kaytrust.core.utils.misc.DidUtils;
+import id.kaytrust.core.utils.misc.MnidUtils;
+import id.kaytrust.core.utils.model.verification.ProofType;
+import id.kaytrust.core.utils.model.verification.ProofTypeBuilder;
+import id.kaytrust.core.utils.model.verification.VerifiableCredential;
+import id.kaytrust.core.utils.nat.IdentityNative;
+import id.kaytrust.core.utils.nat.VerificationByteCode;
+import id.kaytrust.core.utils.nat.VerifyNative;
+import id.kaytrust.proof.util.CheckProof;
+import id.kaytrust.proof.util.UtilProofType;
+import lombok.extern.slf4j.Slf4j;
+<span class="fc" id="L24">@Slf4j</span>
+public class EthereumAttestationSmartContractBuilder implements ProofTypeBuilder {
+
+	public static final String TYPE = &quot;SmartContract&quot;;
+
+	public static final String PROOF_TYPE_NETWORKID_DEFAULT = &quot;0x9e551&quot;;
+	
+	private EthereumAttestationSmartContractProofType proofType;
+
+<span class="fc" id="L33">	public EthereumAttestationSmartContractBuilder() {</span>
+<span class="fc" id="L34">		proofType = new EthereumAttestationSmartContractProofType();</span>
+<span class="fc" id="L35">		proofType.setType(TYPE);</span>
+<span class="fc" id="L36">	}</span>
+
+	@Override
+	public ProofType getProofType() {
+<span class="nc" id="L40">		return proofType;</span>
+	}
+
+	public void setContract(String netWorkId, String addressContract) {
+<span class="nc" id="L44">		proofType.setNetworkId(netWorkId);</span>
+<span class="nc" id="L45">		proofType.setVerificationMethod(addressContract);</span>
+<span class="nc" id="L46">	}</span>
+
+	@Override
+	public &lt;T&gt; String addProof(VerifiableCredential&lt;T&gt; vc, String netWorkId, String addressContract) {
+
+<span class="nc" id="L51">		setContract(netWorkId, addressContract);</span>
+
+<span class="nc" id="L53">		vc.setProof(proofType);</span>
+
+<span class="nc" id="L55">		return new GsonBuilder().setDateFormat(UtilProofType.FORMAT_DATE_ISO).create().toJson(vc);</span>
+	}
+
+	@Override
+	public &lt;T&gt; String generateProof(VerifiableCredential&lt;T&gt; vc, String issuer,
+	IdentityNative identityNative, String privateKey, String addressContractDestination, double factor) throws MnidInvalidAddressException, IOException, TransactionException, CapabilityException  {
+
+<span class="nc" id="L62">		String specificIdentifier = DidUtils.getSpecificIdentifierFromDid(issuer);</span>
+
+<span class="nc" id="L64">		String proxy = MnidUtils.decode(specificIdentifier).getAddress();</span>
+
+<span class="nc" id="L66">		log.info(&quot;proxy : {}&quot;, issuer);</span>
+
+<span class="nc" id="L68">		setContract(PROOF_TYPE_NETWORKID_DEFAULT, addressContractDestination);</span>
+
+<span class="nc" id="L70">		String stringVc = new GsonBuilder().setDateFormat(UtilProofType.FORMAT_DATE_ISO).create().toJson(vc);</span>
+<span class="nc" id="L71">		String encodedFunction = VerificationByteCode.getVerify(stringVc, BigInteger.ZERO);</span>
+		
+<span class="nc" id="L73">		identityNative.forward(privateKey, proxy, addressContractDestination, encodedFunction, factor);</span>
+
+<span class="nc" id="L75">		return stringVc;</span>
+	}
+
+	
+
+	@Override
+	public CheckProof checkProof(VerifyNative verification,String addressFrom, String addressContract,  String vc, String issuer) throws MnidInvalidAddressException, IOException  {
+	
+<span class="nc" id="L83">		String specificIdentifier = DidUtils.getSpecificIdentifierFromDid(issuer);</span>
+<span class="nc" id="L84">		String proxy = MnidUtils.decode(specificIdentifier).getAddress();</span>
+<span class="nc" id="L85">		List&lt;BigInteger&gt; validDates = verification.verifications(addressFrom, addressContract,proxy,  vc);</span>
+
+<span class="nc" id="L87">		EthereumAttestationEnum enumE = UtilProofType.checkDates(validDates);</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		return new CheckProof(enumE == EthereumAttestationEnum.ACCREDITED, enumE.name());</span>
+	}
+
+	@Override
+	public String getVc(String vc) {
+<span class="nc" id="L94">		return vc;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

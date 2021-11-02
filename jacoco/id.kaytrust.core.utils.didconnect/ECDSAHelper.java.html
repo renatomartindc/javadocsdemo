@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ECDSAHelper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.didconnect</a> &gt; <span class="el_source">ECDSAHelper.java</span></div><h1>ECDSAHelper.java</h1><pre class="source lang-java linenums">	package id.kaytrust.core.utils.didconnect;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.util.Base64;
+
+public class ECDSAHelper {
+
+	private static final String INVALID_DER = &quot;Invalid DER signature format.&quot;;
+	private final String algorithm;
+	private final int ecNumberSize;
+
+<span class="fc" id="L20">	public ECDSAHelper(String algorithm, int ecNumberSize) throws IllegalArgumentException {</span>
+<span class="fc" id="L21">		this.algorithm = algorithm;</span>
+<span class="fc" id="L22">		this.ecNumberSize = ecNumberSize;</span>
+<span class="fc" id="L23">	}</span>
+
+	public boolean verify(PublicKey publicKey, String header, String body, String signer) throws InvalidKeyException, NoSuchAlgorithmException, SignatureException   {
+
+<span class="pc bpc" id="L27" title="1 of 2 branches missed.">		if (publicKey == null) {</span>
+<span class="nc" id="L28">			throw new IllegalStateException(&quot;The given Public Key is null.&quot;);</span>
+		}
+		
+<span class="fc" id="L31">		return verifySignatureFor(algorithm, publicKey, header.getBytes(StandardCharsets.UTF_8), body.getBytes(StandardCharsets.UTF_8),</span>
+<span class="fc" id="L32">				joseToDer(Base64.getUrlDecoder().decode(signer), ecNumberSize));</span>
+
+	}
+
+	public byte[] sign(PrivateKey privateKey, byte[] headerBytes, byte[] payloadBytes) throws InvalidKeyException, NoSuchAlgorithmException, SignatureException  {
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">		if (privateKey == null) {</span>
+<span class="nc" id="L38">			throw new IllegalStateException(&quot;The given Private Key is null.&quot;);</span>
+		}
+<span class="fc" id="L40">		byte[] signature = createSignatureFor(algorithm, privateKey, headerBytes, payloadBytes);</span>
+
+<span class="fc" id="L42">		return derToJose(signature, ecNumberSize);</span>
+
+	}
+
+	private byte[] derToJose(byte[] derSignature, int ecNumberSize) throws SignatureException {
+		// DER Structure: http://crypto.stackexchange.com/a/1797
+<span class="pc bpc" id="L48" title="2 of 4 branches missed.">		boolean derEncoded = derSignature[0] == 0x30 &amp;&amp; derSignature.length != ecNumberSize * 2;</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">		if (!derEncoded) {</span>
+<span class="nc" id="L50">			throw new SignatureException(INVALID_DER);</span>
+		}
+
+<span class="fc" id="L53">		final byte[] joseSignature = new byte[ecNumberSize * 2];</span>
+
+		// Skip 0x30
+<span class="fc" id="L56">		int offset = 1;</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">		if (derSignature[1] == (byte) 0x81) {</span>
+			// Skip sign
+<span class="nc" id="L59">			offset++;</span>
+		}
+
+		// Convert to unsigned. Should match DER length - offset
+<span class="fc" id="L63">		int encodedLength = derSignature[offset++] &amp; 0xff;</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">		if (encodedLength != derSignature.length - offset) {</span>
+<span class="nc" id="L65">			throw new SignatureException(INVALID_DER);</span>
+		}
+
+		// Skip 0x02
+<span class="fc" id="L69">		offset++;</span>
+
+		// Obtain R number length (Includes padding) and skip it
+<span class="fc" id="L72">		int rLength = derSignature[offset++];</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">		if (rLength &gt; ecNumberSize + 1) {</span>
+<span class="nc" id="L74">			throw new SignatureException(INVALID_DER);</span>
+		}
+<span class="fc" id="L76">		int rPadding = ecNumberSize - rLength;</span>
+		// Retrieve R number
+<span class="fc" id="L78">		System.arraycopy(derSignature, offset + Math.max(-rPadding, 0), joseSignature, Math.max(rPadding, 0),</span>
+<span class="fc" id="L79">				rLength + Math.min(rPadding, 0));</span>
+
+		// Skip R number and 0x02
+<span class="fc" id="L82">		offset += rLength + 1;</span>
+
+		// Obtain S number length. (Includes padding)
+<span class="fc" id="L85">		int sLength = derSignature[offset++];</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">		if (sLength &gt; ecNumberSize + 1) {</span>
+<span class="nc" id="L87">			throw new SignatureException(INVALID_DER);</span>
+		}
+<span class="fc" id="L89">		int sPadding = ecNumberSize - sLength;</span>
+		// Retrieve R number
+<span class="fc" id="L91">		System.arraycopy(derSignature, offset + Math.max(-sPadding, 0), joseSignature,</span>
+<span class="fc" id="L92">				ecNumberSize + Math.max(sPadding, 0), sLength + Math.min(sPadding, 0));</span>
+
+<span class="fc" id="L94">		return joseSignature;</span>
+	}
+
+	private byte[] joseToDer(byte[] joseSignature, int ecNumberSize) throws SignatureException {
+
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">		if (joseSignature.length != ecNumberSize * 2) {</span>
+<span class="nc" id="L100">			throw new SignatureException(&quot;Invalid JOSE signature format.&quot;);</span>
+		}
+
+		// Retrieve R and S number's length and padding.
+<span class="fc" id="L104">		int rPadding = countPadding(joseSignature, 0, ecNumberSize);</span>
+<span class="fc" id="L105">		int sPadding = countPadding(joseSignature, ecNumberSize, joseSignature.length);</span>
+<span class="fc" id="L106">		int rLength = ecNumberSize - rPadding;</span>
+<span class="fc" id="L107">		int sLength = ecNumberSize - sPadding;</span>
+
+<span class="fc" id="L109">		int length = 2 + rLength + 2 + sLength;</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">		if (length &gt; 255) {</span>
+<span class="nc" id="L111">			throw new SignatureException(&quot;Invalid JOSE signature format.&quot;);</span>
+		}
+
+		final byte[] derSignature;
+		int offset;
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">		if (length &gt; 0x7f) {</span>
+<span class="nc" id="L117">			derSignature = new byte[3 + length];</span>
+<span class="nc" id="L118">			derSignature[1] = (byte) 0x81;</span>
+<span class="nc" id="L119">			offset = 2;</span>
+		} else {
+<span class="fc" id="L121">			derSignature = new byte[2 + length];</span>
+<span class="fc" id="L122">			offset = 1;</span>
+		}
+
+		// DER Structure: http://crypto.stackexchange.com/a/1797
+		// Header with signature length info
+<span class="fc" id="L127">		derSignature[0] = (byte) 0x30;</span>
+<span class="fc" id="L128">		derSignature[offset++] = (byte) (length &amp; 0xff);</span>
+
+		// Header with &quot;min R&quot; number length
+<span class="fc" id="L131">		derSignature[offset++] = (byte) 0x02;</span>
+<span class="fc" id="L132">		derSignature[offset++] = (byte) rLength;</span>
+
+		// R number
+<span class="fc bfc" id="L135" title="All 2 branches covered.">		if (rPadding &lt; 0) {</span>
+			// Sign
+<span class="fc" id="L137">			derSignature[offset++] = (byte) 0x00;</span>
+<span class="fc" id="L138">			System.arraycopy(joseSignature, 0, derSignature, offset, ecNumberSize);</span>
+<span class="fc" id="L139">			offset += ecNumberSize;</span>
+		} else {
+<span class="fc" id="L141">			int copyLength = Math.min(ecNumberSize, rLength);</span>
+<span class="fc" id="L142">			System.arraycopy(joseSignature, rPadding, derSignature, offset, copyLength);</span>
+<span class="fc" id="L143">			offset += copyLength;</span>
+		}
+
+		// Header with &quot;min S&quot; number length
+<span class="fc" id="L147">		derSignature[offset++] = (byte) 0x02;</span>
+<span class="fc" id="L148">		derSignature[offset++] = (byte) sLength;</span>
+
+		// S number
+<span class="fc bfc" id="L151" title="All 2 branches covered.">		if (sPadding &lt; 0) {</span>
+			// Sign
+<span class="fc" id="L153">			derSignature[offset++] = (byte) 0x00;</span>
+<span class="fc" id="L154">			System.arraycopy(joseSignature, ecNumberSize, derSignature, offset, ecNumberSize);</span>
+		} else {
+<span class="fc" id="L156">			System.arraycopy(joseSignature, ecNumberSize + sPadding, derSignature, offset,</span>
+<span class="fc" id="L157">					Math.min(ecNumberSize, sLength));</span>
+		}
+
+<span class="fc" id="L160">		return derSignature;</span>
+	}
+
+	private int countPadding(byte[] bytes, int fromIndex, int toIndex) {
+<span class="fc" id="L164">		int padding = 0;</span>
+<span class="pc bpc" id="L165" title="2 of 4 branches missed.">		while (fromIndex + padding &lt; toIndex &amp;&amp; bytes[fromIndex + padding] == 0) {</span>
+<span class="nc" id="L166">			padding++;</span>
+		}
+<span class="fc bfc" id="L168" title="All 2 branches covered.">		return (bytes[fromIndex + padding] &amp; 0xff) &gt; 0x7f ? padding - 1 : padding;</span>
+	}
+
+
+    boolean verifySignatureFor(String algorithm, PublicKey publicKey, byte[] headerBytes, byte[] payloadBytes, byte[] signatureBytes) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+<span class="fc" id="L173">    	final Signature s = Signature.getInstance(algorithm);</span>
+<span class="fc" id="L174">        s.initVerify(publicKey);</span>
+<span class="fc" id="L175">        s.update(headerBytes);</span>
+<span class="fc" id="L176">        s.update(Secp256k1Utils.JWT_PART_SEPARATOR);</span>
+<span class="fc" id="L177">        s.update(payloadBytes);</span>
+<span class="fc" id="L178">        return s.verify(signatureBytes);</span>
+    }
+    
+
+    byte[] createSignatureFor(String algorithm, PrivateKey privateKey, byte[] headerBytes, byte[] payloadBytes) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+<span class="fc" id="L183">        final Signature s = Signature.getInstance(algorithm);</span>
+<span class="fc" id="L184">        s.initSign(privateKey);</span>
+<span class="fc" id="L185">        s.update(headerBytes);</span>
+<span class="fc" id="L186">        s.update(Secp256k1Utils.JWT_PART_SEPARATOR);</span>
+<span class="fc" id="L187">        s.update(payloadBytes);</span>
+<span class="fc" id="L188">        return s.sign();</span>
+    }
+    
+     String concatJwt(byte[] headerBytes, byte[] payloadBytes, byte[] signatureBytes) throws IOException {
+<span class="fc" id="L192">		ByteArrayOutputStream output = new ByteArrayOutputStream();</span>
+<span class="fc" id="L193">		output.write(headerBytes);</span>
+<span class="fc" id="L194">		output.write(Secp256k1Utils.JWT_PART_SEPARATOR);</span>
+<span class="fc" id="L195">		output.write(payloadBytes);</span>
+<span class="fc" id="L196">		output.write(Secp256k1Utils.JWT_PART_SEPARATOR);</span>
+<span class="fc" id="L197">		output.write(signatureBytes);</span>
+		
+<span class="fc" id="L199">		return new String(output.toByteArray());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

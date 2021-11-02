@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IdentityByteCode.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.nat</a> &gt; <span class="el_source">IdentityByteCode.java</span></div><h1>IdentityByteCode.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.nat;
+
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
+
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Bool;
+import org.web3j.abi.datatypes.DynamicBytes;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Utf8String;
+import org.web3j.abi.datatypes.generated.Bytes16;
+import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.utils.Numeric;
+
+import id.kaytrust.core.utils.misc.Utils;
+
+public class IdentityByteCode {
+
+        private static final String FUNC_CREATEIDENTITY = &quot;createIdentity&quot;;
+        private static final String FUNC_HASCAP = &quot;hasCap&quot;;
+        private static final String FUNC_FORWARDTO = &quot;forwardTo&quot;;
+        private static final String FUNC_SETCAP = &quot;setCap&quot;;
+        private static final String FUNC_REGISTERED_IDENTITIES = &quot;registered_identities&quot;;
+        public static final String FUNC_SETDEVICE = &quot;setDevice&quot;;
+
+        private IdentityByteCode() {
+        }
+
+        public static String getCreateIdentity() {
+<span class="fc" id="L33">                final Function function = new Function(FUNC_CREATEIDENTITY,</span>
+<span class="fc" id="L34">                                Arrays.asList(new Bytes16(Utils.stringToBytes(&quot;&quot;, 16)),</span>
+<span class="fc" id="L35">                                                new Bytes16(Utils.stringToBytes(&quot;&quot;, 16)), new Utf8String(&quot;&quot;),</span>
+                                                new Utf8String(&quot;&quot;), new Utf8String(&quot;&quot;)),
+<span class="fc" id="L37">                                Collections.emptyList());</span>
+
+<span class="fc" id="L39">                return FunctionEncoder.encode(function);</span>
+        }
+
+        public static String getHasCap(String identity, String device, String cap) {
+<span class="fc" id="L43">                final Function function = new Function(FUNC_HASCAP,</span>
+<span class="fc" id="L44">                                Arrays.asList(new Address(160, identity), new Address(160, device),</span>
+                                                new Utf8String(cap)),
+<span class="fc" id="L46">                                Arrays.asList(new TypeReference&lt;Bool&gt;() {</span>
+                                }));
+
+<span class="fc" id="L49">                return FunctionEncoder.encode(function);</span>
+        }
+
+        public static String registeredIdentities(String address) {
+<span class="fc" id="L53">                final Function function = new Function(FUNC_REGISTERED_IDENTITIES, </span>
+<span class="fc" id="L54">                        Arrays.asList(new Address(160, address)), </span>
+<span class="fc" id="L55">                        Arrays.asList(new TypeReference&lt;Bool&gt;() {}));</span>
+<span class="fc" id="L56">                return FunctionEncoder.encode(function);</span>
+            }
+
+        public static String setCap(String identity, String device, String cap, BigInteger startDate, BigInteger endDate) {
+<span class="fc" id="L60">                final Function function = new Function(</span>
+                        FUNC_SETCAP,
+<span class="fc" id="L62">                        Arrays.asList(new Address(160, identity), </span>
+                        new Address(160, device), 
+                        new Utf8String(cap), 
+                        new Uint256(startDate), 
+                        new Uint256(endDate)), 
+<span class="fc" id="L67">                        Collections.&lt;TypeReference&lt;?&gt;&gt;emptyList());</span>
+
+<span class="fc" id="L69">                return FunctionEncoder.encode(function);</span>
+        }
+
+        public static String forwardTo(String identity, String destination, BigInteger value, String encodedFunction) {
+
+<span class="fc" id="L74">                byte[] data = Numeric.hexStringToByteArray(Numeric.cleanHexPrefix(encodedFunction));</span>
+
+<span class="fc" id="L76">                final Function function = new Function(FUNC_FORWARDTO,</span>
+<span class="fc" id="L77">                                Arrays.asList(new Address(160, identity), new Address(160, destination),</span>
+                                                new Uint256(value), new DynamicBytes(data)),
+<span class="fc" id="L79">                                Collections.emptyList());</span>
+
+<span class="fc" id="L81">                return FunctionEncoder.encode(function);</span>
+        }
+
+
+        public static String setDevice(String identity, String device, BigInteger startDate, BigInteger endDate) {
+<span class="fc" id="L86">                final Function function = new Function(</span>
+                        FUNC_SETDEVICE, 
+<span class="fc" id="L88">                        Arrays.asList(new Address(160, identity), </span>
+                        new Address(160, device), 
+                        new Uint256(startDate), 
+                        new Uint256(endDate)), 
+<span class="fc" id="L92">                        Collections.&lt;TypeReference&lt;?&gt;&gt;emptyList());</span>
+                
+<span class="fc" id="L94">                        return FunctionEncoder.encode(function);</span>
+        }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

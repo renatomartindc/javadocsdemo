@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EthereumIdentityConsumerImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.identity.ethereum.client</a> &gt; <span class="el_source">EthereumIdentityConsumerImpl.java</span></div><h1>EthereumIdentityConsumerImpl.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.identity.ethereum.client;
+
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.web3j.protocol.core.JsonRpc2_0Web3j;
+import org.web3j.utils.Strings;
+
+import id.kaytrust.core.utils.didconnect.EthereumKeyUtils;
+import id.kaytrust.core.utils.didconnect.Secp256k1Utils;
+import id.kaytrust.core.utils.didconnect.model.jwt.JwtPayload;
+import id.kaytrust.core.utils.enums.CapabilityEnum;
+import id.kaytrust.core.utils.exception.AudienceException;
+import id.kaytrust.core.utils.exception.JwtExpirationException;
+import id.kaytrust.core.utils.exception.JwtVerifyException;
+import id.kaytrust.core.utils.exception.MnidInvalidAddressException;
+import id.kaytrust.core.utils.exception.ParamEmptyException;
+import id.kaytrust.core.utils.misc.DidUtils;
+import id.kaytrust.core.utils.misc.MnidUtils;
+import id.kaytrust.core.utils.nat.IdentityNative;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * This class represents an implementation of {@link EthereumIdentityConsumer};
+ * it defines specific methods to check authorization levels (capabilities) that
+ * user's devices have over identities deployed on the ethereum network and
+ * mapped in a specific instance of a Identity Manager smart contract.
+ * &lt;p&gt;
+ * This implementation is fully compatible with any ethereum network.
+ * 
+ * @author Edgard Espinoza
+ * @author Erick Pacheco
+ */
+<span class="fc" id="L41">@Slf4j</span>
+public class EthereumIdentityConsumerImpl implements EthereumIdentityConsumer {
+	private String host;
+	private String token;
+	/**
+	 * Contains the list of wrappers that connects to all available Identity
+	 * Managers known by a running instance of this class.
+	 */
+<span class="fc" id="L49">	private List&lt;String&gt; listDigitalIdentity = new ArrayList&lt;&gt;();</span>
+
+	/**
+	 * Sets the identity Manager wrapper instances to interact with the Identity
+	 * Manager smart contracts deployed in the ethereum network.
+	 * 
+	 * @param hostRpc           host and port where ethereum node serves RPC
+	 *                          requests
+	 * @param token             can be blank, is token field Authorization
+	 * @param contractAddresses List of contract addresses where the Identity
+	 *                          Manager smart contracts live.
+	 */
+<span class="fc" id="L61">	public EthereumIdentityConsumerImpl(String hostRpc, String token, String... contractAddresses) {</span>
+<span class="fc" id="L62">		this.host = hostRpc;</span>
+<span class="fc" id="L63">		this.token = token;</span>
+<span class="fc" id="L64">		this.listDigitalIdentity = Arrays.asList(contractAddresses);</span>
+
+<span class="fc" id="L66">	}</span>
+
+	public boolean hasCap(String proxyAddress, String addressDevice, String capability) throws IOException {
+
+<span class="fc" id="L70">		boolean flag = false;</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">		for (String addressContract : listDigitalIdentity) {</span>
+
+<span class="fc" id="L73">			IdentityNative identityNative = IdentityNative.build(host, token, addressContract, JsonRpc2_0Web3j.DEFAULT_BLOCK_TIME);</span>
+
+			try {
+<span class="fc" id="L76">				flag = identityNative.hasCap(proxyAddress, proxyAddress, addressDevice, capability);</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">				if (flag) {</span>
+					break;
+				}
+			} finally {
+<span class="fc" id="L81">				identityNative.shutdown();</span>
+			}
+<span class="nc" id="L83">		}</span>
+
+<span class="fc" id="L85">		log.info(&quot;[hasCap]:{}&quot;, flag);</span>
+
+<span class="fc" id="L87">		return flag;</span>
+
+	}
+
+	private boolean validateIfDidIsinIdentityManager(String did) throws MnidInvalidAddressException, IOException {
+
+<span class="fc" id="L93">		boolean flag = false;</span>
+<span class="fc" id="L94">		String specificIdentifier = DidUtils.getSpecificIdentifierFromDid(did);</span>
+<span class="fc" id="L95">		String proxy = MnidUtils.decode(specificIdentifier).getAddress();</span>
+
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">		for (String addressContract : listDigitalIdentity) {</span>
+
+<span class="fc" id="L99">			IdentityNative identityNative = IdentityNative.build(host, token, addressContract, JsonRpc2_0Web3j.DEFAULT_BLOCK_TIME);</span>
+			try {
+<span class="fc" id="L101">				flag = identityNative.registeredIdentities(proxy, proxy);</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">				if (flag) {</span>
+					break;
+				}
+			} finally {
+<span class="fc" id="L106">				identityNative.shutdown();</span>
+			}
+<span class="nc" id="L108">		}</span>
+
+<span class="fc" id="L110">		return flag;</span>
+
+	}
+
+	/**
+	 * At a high level; an Identity Manager wrapper is returned.
+	 * &lt;p&gt;
+	 * If the &quot;did&quot; argument has been already registered on some of the identity
+	 * Manager smart contracts that a running instance of this class has registered
+	 * when setting the &quot;instance&quot; method, then a wrapper to interact with that
+	 * identity Manager contract is returned.
+	 * 
+	 * @param did The &lt;a target=&quot;_blank&quot; href=
+	 *            &quot;https://www.w3.org/2019/09/did-wg-charter.html#:~:text=Decentralized%20Identifiers%20(DIDs)%20are%20a,identity%20provider%2C%20or%20certificate%20authority.&quot;&gt;Decentralized
+	 *            identifier&lt;/a&gt;
+	 *
+	 * @return Returns a java Identity Manager instance.
+	 * @throws IOException                 network exception
+	 * @throws MnidInvalidAddressException mnid format error
+	 */
+	public String getIdentityManagerFromDid(String did) throws MnidInvalidAddressException, IOException {
+<span class="nc" id="L131">		String specificIdentifier = DidUtils.getSpecificIdentifierFromDid(did);</span>
+<span class="nc" id="L132">		String proxy = MnidUtils.decode(specificIdentifier).getAddress();</span>
+<span class="nc" id="L133">		String contracAddress = null;</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">		for (String addressContract : listDigitalIdentity) {</span>
+
+<span class="nc" id="L136">			IdentityNative identityNative = IdentityNative.build(host, token, addressContract, JsonRpc2_0Web3j.DEFAULT_BLOCK_TIME);</span>
+			try {
+<span class="nc" id="L138">				boolean flag = identityNative.registeredIdentities(proxy, proxy);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">				if (flag) {</span>
+<span class="nc" id="L140">					contracAddress = addressContract;</span>
+					break;
+				}
+			} finally {
+<span class="nc" id="L144">				identityNative.shutdown();</span>
+			}
+<span class="nc" id="L146">		}</span>
+<span class="nc" id="L147">		return contracAddress;</span>
+	}
+
+	/**
+	 * Verifies if an address device (derived from the &quot;devicePublicKey&quot;) is
+	 * authorized with a specified &quot;capability&quot; for a proxy smart contract whose
+	 * address is embedded in the &quot;did&quot; parameter.
+	 *
+	 * @param did             The &lt;a target=&quot;_blank&quot; href=
+	 *                        &quot;https://www.w3.org/2019/09/did-wg-charter.html#:~:text=Decentralized%20Identifiers%20(DIDs)%20are%20a,identity%20provider%2C%20or%20certificate%20authority.&quot;&gt;Decentralized
+	 *                        identifier&lt;/a&gt;
+	 * @param devicePublicKey The device's public key
+	 * @param capability      The capability to query in the smart contract.
+	 * @return true if the device address is authorized, false otherwise
+	 * @throws IOException                 network exception
+	 * @throws MnidInvalidAddressException mnid format error
+	 */
+	public boolean isDeviceAuthorized(String did, String devicePublicKey, String capability)
+			throws MnidInvalidAddressException, IOException {
+
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">		if (Strings.isEmpty(capability)) {</span>
+<span class="nc" id="L168">			capability = CapabilityEnum.AUTH.description();</span>
+		}
+
+<span class="fc" id="L171">		String specificIdentifier = DidUtils.getSpecificIdentifierFromDid(did);</span>
+
+<span class="pc bpc" id="L173" title="2 of 4 branches missed.">		return validateIfDidIsinIdentityManager(did) &amp;&amp; hasCap(MnidUtils.decode(specificIdentifier).getAddress(),</span>
+<span class="fc" id="L174">				EthereumKeyUtils.getAddressFromPublicKey(devicePublicKey), capability);</span>
+
+	}
+
+	/**
+	 * First, the process verifies if a &quot;jwt&quot; contains a required &quot;audience&quot;
+	 * (specified in the &quot;aud&quot; field in the jwt); if so the did (subject field of
+	 * the jwt), the device's address (processed from the &quot;iss&quot; field in the jwt)
+	 * and the capability (&quot;cap&quot; field in the jwt) are extracted from the jwt. The
+	 * extracted fields (did, address and capability) are used to make a second
+	 * verification that is defined according to a specific implementation of this
+	 * interface.
+	 * 
+	 * @param jwt        access token jwt
+	 * @param audience   aud who receive jwt
+	 * @param capability capability as fw,
+	 * @return true or false if jwt
+	 * @throws AudienceException           audience incorrect
+	 * @throws JwtVerifyException          jwt is not valid
+	 * @throws JwtExpirationException      jwt is expired
+	 * @throws InvalidKeySpecException     Invalid Key Spec
+	 * @throws NoSuchProviderException     No Such Provider
+	 * @throws SignatureException          Signature error
+	 * @throws NoSuchAlgorithmException    No Such Algorithm
+	 * @throws InvalidKeyException         Invalid Key
+	 * @throws IOException                 io exception
+	 * @throws MnidInvalidAddressException mnid format error
+	 * @throws ParamEmptyException         if a required parameter is empty.
+	 */
+	public boolean checkIdentityToken(String jwt, String audience, String capability) throws InvalidKeyException,
+			NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeySpecException,
+			JwtExpirationException, JwtVerifyException, AudienceException, MnidInvalidAddressException, IOException, ParamEmptyException {
+
+<span class="pc bpc" id="L207" title="1 of 2 branches missed.">		if (Strings.isEmpty(capability)) {</span>
+<span class="nc" id="L208">			capability = CapabilityEnum.AUTH.description();</span>
+		}
+
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">		if (Strings.isEmpty(jwt)) {</span>
+<span class="nc" id="L212">			throw new ParamEmptyException(&quot;jwt&quot;);</span>
+		}
+
+<span class="fc" id="L215">		JwtPayload&lt;?&gt; jwtPayload = Secp256k1Utils.verifyJwTokenSecp256k1(jwt, audience);</span>
+
+<span class="fc" id="L217">		return isDeviceAuthorized(jwtPayload.getSub(), jwtPayload.getIss(), capability);</span>
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

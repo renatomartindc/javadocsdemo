@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MnidUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.misc</a> &gt; <span class="el_source">MnidUtils.java</span></div><h1>MnidUtils.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.misc;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import org.bouncycastle.util.encoders.Hex;
+import org.web3j.utils.Numeric;
+
+import id.kaytrust.core.utils.exception.MnidInvalidAddressException;
+import id.kaytrust.core.utils.model.Mnid;
+
+public class MnidUtils {
+
+	private MnidUtils() {
+	}
+
+	public static final String INVALID_ADDRESS_MNID_ERROR = &quot;INVALID_ADDRESS_MNID_ERROR&quot;;
+
+	public static byte[] checksum(byte[] version, byte[] network, byte[] address) throws IOException {
+
+<span class="fc" id="L24">		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {</span>
+<span class="fc" id="L25">			outputStream.write(version);</span>
+<span class="fc" id="L26">			outputStream.write(network);</span>
+<span class="fc" id="L27">			outputStream.write(address);</span>
+
+<span class="fc" id="L29">			byte[] bytesToSha3256 = HashUtils.bytesTosha3(outputStream.toByteArray());</span>
+
+<span class="fc" id="L31">			return Arrays.copyOfRange(bytesToSha3256, 0, 4);</span>
+		}
+
+	}
+
+	public static String encode(String network, String address) throws IOException {
+<span class="fc" id="L37">		byte[] versionByte = Hex.decode(&quot;01&quot;);</span>
+<span class="fc" id="L38">		byte[] networkByte = Utils.decode(network.substring(2));</span>
+<span class="fc" id="L39">		byte[] addressByte = Hex.decode(address.substring(2));</span>
+<span class="fc" id="L40">		byte[] checksumByte = checksum(versionByte, networkByte, addressByte);</span>
+
+<span class="fc" id="L42">		byte[] concatByte = ByteBuffer</span>
+<span class="fc" id="L43">				.allocate(versionByte.length + networkByte.length + addressByte.length + checksumByte.length)</span>
+<span class="fc" id="L44">				.put(versionByte).put(networkByte).put(addressByte).put(checksumByte).array();</span>
+
+<span class="fc" id="L46">		return Base58.encode(concatByte);</span>
+	}
+
+	public static Mnid decode(String mnid) throws MnidInvalidAddressException, IOException {
+<span class="fc" id="L50">		byte[] data = Base58.decode(mnid);</span>
+
+<span class="fc" id="L52">		int netLength = data.length - 24;</span>
+<span class="fc" id="L53">		byte[] version = Arrays.copyOfRange(data, 0, 1);</span>
+<span class="fc" id="L54">		byte[] network = Arrays.copyOfRange(data, 1, netLength);</span>
+<span class="fc" id="L55">		byte[] address = Arrays.copyOfRange(data, netLength, 20 + netLength);</span>
+<span class="fc" id="L56">		byte[] check = Arrays.copyOfRange(data, netLength + 20, data.length);</span>
+
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">		if (Arrays.equals(check, checksum(version, network, address))) {</span>
+<span class="fc" id="L59">			return new Mnid(Numeric.toHexStringWithPrefix(new BigInteger(network)), Numeric.toHexString(address));</span>
+		} else {
+<span class="nc" id="L61">			throw new MnidInvalidAddressException(INVALID_ADDRESS_MNID_ERROR);</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

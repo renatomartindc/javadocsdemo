@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Secp256k1Utils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.didconnect</a> &gt; <span class="el_source">Secp256k1Utils.java</span></div><h1>Secp256k1Utils.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.didconnect;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+import java.time.Instant;
+import java.util.Base64;
+import java.util.Date;
+import java.lang.reflect.Type;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.Gson;
+
+import org.web3j.utils.Strings;
+
+import id.kaytrust.core.utils.didconnect.model.jwt.JwtBean;
+import id.kaytrust.core.utils.didconnect.model.jwt.JwtHeader;
+import id.kaytrust.core.utils.didconnect.model.jwt.JwtPayload;
+import id.kaytrust.core.utils.exception.AudienceException;
+import id.kaytrust.core.utils.exception.JwtExpirationException;
+import id.kaytrust.core.utils.exception.JwtVerifyException;
+
+/**
+ * 
+ * @author Edgard Espinoza
+ * @author everis s.a.
+ * @version 1.0
+ * 
+ */
+public class Secp256k1Utils {
+
+<span class="nc" id="L35">	Secp256k1Utils() {</span>
+<span class="nc" id="L36">	}</span>
+
+	public static final String BEARER = &quot;Bearer &quot;;
+	private static final String ES256K = &quot;ES256K&quot;;
+	private static final String JWT = &quot;JWT&quot;;
+	private static final String SHA256WITHECDSA = &quot;SHA256withECDSA&quot;;
+	protected static final byte JWT_PART_SEPARATOR = (byte) 46;
+
+	public static final String VERIFY_JWT_ERROR = &quot;VERIFY_JWT_ERROR&quot;;
+	public static final String AUDIENCE_JWT_ERROR = &quot;AUDIENCE_JWT_ERROR&quot;;
+	public static final String EXPIRED_JWT_ERROR = &quot;EXPIRED_JWT_ERROR&quot;;
+
+
+	/**
+	 * Verify that a JWT is signed correctly.
+	 * @param &lt;T&gt; 	This is the type parameter
+	 * @param jwtToken access token JWT
+	 * @param aud audience who receive el jwt
+	 * @return JwtPayload Object JWT
+	 * @throws JwtExpirationException   Jwt Expiration
+	 * @throws InvalidKeySpecException  Invalid Key Spec
+	 * @throws NoSuchProviderException  No Such Provider
+	 * @throws SignatureException       Signature error
+	 * @throws NoSuchAlgorithmException No Such Algorithm
+	 * @throws JwtVerifyException       jwt is not valid
+	 * @throws AudienceException        audience incorrect
+	 * @throws InvalidKeyException      Invalid Key
+
+	 */
+	public static &lt;T&gt; JwtPayload&lt;T&gt; verifyJwTokenSecp256k1(String jwtToken, String aud)
+			throws JwtExpirationException, InvalidKeyException, NoSuchAlgorithmException, SignatureException,
+			NoSuchProviderException, InvalidKeySpecException, JwtVerifyException, AudienceException {
+			
+<span class="fc" id="L69">			Type type = new TypeToken&lt;JwtPayload&lt;T&gt;&gt;() {}.getType();</span>
+
+<span class="fc" id="L71">			return verifyJwTokenSecp256k1( jwtToken,  aud, type );</span>
+	}
+
+	public static &lt;T&gt; JwtPayload&lt;T&gt; verifyJwTokenSecp256k1(String jwtToken, String aud, Type type )
+			throws JwtExpirationException, InvalidKeyException, NoSuchAlgorithmException, SignatureException,
+			NoSuchProviderException, InvalidKeySpecException, JwtVerifyException, AudienceException {
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">				if (jwtToken.startsWith(BEARER)){</span>
+<span class="nc" id="L78">					jwtToken = jwtToken.replaceFirst(BEARER, &quot;&quot;).trim();</span>
+				}
+	
+<span class="fc" id="L81">			String[] split = jwtToken.trim().split(&quot;\\.&quot;);</span>
+	
+<span class="fc" id="L83">			String dataJsonBody = new String(Base64.getUrlDecoder().decode(split[1]));</span>
+	
+			@SuppressWarnings(&quot;unchecked&quot;)
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">			JwtPayload&lt;T&gt; payload = type == null ? new Gson().fromJson(dataJsonBody, JwtPayload.class):  new Gson().fromJson(dataJsonBody, type);</span>
+	
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">			if (!validateTime(payload))</span>
+<span class="nc" id="L89">				throw new JwtExpirationException(EXPIRED_JWT_ERROR);</span>
+	
+			// verify ecNumberSize = 32
+<span class="fc" id="L92">			ECDSAHelper ecdsaAlgorithm = new ECDSAHelper(SHA256WITHECDSA, 32);</span>
+	
+<span class="fc" id="L94">			boolean validate = ecdsaAlgorithm.verify(EthereumKeyUtils.getPublicKey(payload.getIss()), split[0], split[1],</span>
+					split[2]);
+	
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">			if (!validate)</span>
+<span class="nc" id="L98">				throw new JwtVerifyException(VERIFY_JWT_ERROR);</span>
+	
+			// validate aud
+<span class="fc bfc" id="L101" title="All 2 branches covered.">			if (!Strings.isEmpty(aud)) {</span>
+<span class="fc" id="L102">				aud = aud.replaceFirst(&quot;http://&quot;, &quot;&quot;).replaceFirst(&quot;https://&quot;, &quot;&quot;).trim();</span>
+<span class="fc" id="L103">				String audPayload = payload.getAud().replaceFirst(&quot;http://&quot;, &quot;&quot;).replaceFirst(&quot;https://&quot;, &quot;&quot;).trim();</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">				if (!audPayload.equals(aud))</span>
+<span class="nc" id="L105">					throw new AudienceException(AUDIENCE_JWT_ERROR);</span>
+			}
+<span class="fc" id="L107">			return payload;</span>
+	}
+
+	/**
+	 * validate expiration of JWT
+	 * 
+	 * @param payload payload of JWT
+	 * @return true or false is time is JwT is valid
+	 */
+	private static boolean validateTime(JwtPayload&lt;?&gt; payload) {
+		// 1579365383
+		// 1590463607
+<span class="fc" id="L119">		Instant instant = Instant.now();</span>
+<span class="fc" id="L120">		long timeStampSeconds = instant.getEpochSecond();</span>
+
+<span class="pc bpc" id="L122" title="3 of 4 branches missed.">		return (timeStampSeconds &lt;= payload.getExp() || payload.getExp() == 0);</span>
+
+	}
+
+	/**
+	 * Generate JwT secp256k1
+	 * 
+	 * @param &lt;T&gt; This is the type parameter of presentation
+	 * @param privateKey private key 
+	 * @param did             The &lt;a target=&quot;_blank&quot; href=
+	 *                        &quot;https://www.w3.org/2019/09/did-wg-charter.html#:~:text=Decentralized%20Identifiers%20(DIDs)%20are%20a,identity%20provider%2C%20or%20certificate%20authority.&quot;&gt;Decentralized
+	 *                        identifier&lt;/a&gt;
+	 * @param audience		 audience who receive el jwt
+	 * @param presentation  object in the payload
+	 * @param expiritionDate   when the access jwt expired 
+	 * @return access token jwt
+	 * @throws InvalidKeyException		Invalid Key 
+	 * @throws NoSuchAlgorithmException No Such Algorithm
+	 * @throws SignatureException		Signature error
+	 * @throws NoSuchProviderException	No Such Provider
+	 * @throws InvalidKeySpecException	Invalid Key Spec
+	 * @throws IOException              io exception
+	 */
+	public static &lt;T&gt; String generateJwTokenSecp256k1(String privateKey, String did, String audience, T presentation,
+			Date expiritionDate) throws InvalidKeyException, NoSuchAlgorithmException, SignatureException,
+			NoSuchProviderException, InvalidKeySpecException, IOException {
+
+<span class="fc" id="L149">		ECDSAHelper ecdsaAlgorithm = new ECDSAHelper(SHA256WITHECDSA, 32);</span>
+<span class="fc" id="L150">		Gson gson = new Gson();</span>
+
+<span class="fc" id="L152">		long timeStampSeconds = Instant.now().getEpochSecond();</span>
+
+<span class="fc" id="L154">		String pubkey = EthereumKeyUtils.getPublicKeyFromPrivateKey(privateKey);</span>
+
+<span class="fc" id="L156">		JwtBean&lt;T&gt; jwt = new JwtBean&lt;&gt;();</span>
+<span class="fc" id="L157">		jwt.getHeader().setAlg(ES256K);</span>
+<span class="fc" id="L158">		jwt.getHeader().setTyp(JWT);</span>
+
+<span class="fc" id="L160">		jwt.getPayload().setSub(did);</span>
+<span class="fc" id="L161">		jwt.getPayload().setIss(pubkey);</span>
+<span class="fc" id="L162">		jwt.getPayload().setAud(audience);</span>
+<span class="fc" id="L163">		jwt.getPayload().setPresentation(presentation);</span>
+
+<span class="fc" id="L165">		jwt.getPayload().setIat(timeStampSeconds);</span>
+<span class="fc" id="L166">		timeStampSeconds = timeStampSeconds + 50 * 60 * 60;</span>
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">		jwt.getPayload().setExp(expiritionDate == null ? timeStampSeconds : expiritionDate.getTime() / 1000);</span>
+
+<span class="fc" id="L169">		String base64encodedHeader = Base64.getUrlEncoder().withoutPadding()</span>
+<span class="fc" id="L170">				.encodeToString(gson.toJson(jwt.getHeader(), JwtHeader.class).getBytes(StandardCharsets.UTF_8));</span>
+
+<span class="fc" id="L172">		String base64encodedPayload = Base64.getUrlEncoder().withoutPadding()</span>
+<span class="fc" id="L173">				.encodeToString(gson.toJson(jwt.getPayload(), JwtPayload.class).getBytes(StandardCharsets.UTF_8));</span>
+
+<span class="fc" id="L175">		byte[] sing = ecdsaAlgorithm.sign(EthereumKeyUtils.getPrivateKeyFromPrivate(privateKey),</span>
+<span class="fc" id="L176">				base64encodedHeader.getBytes(StandardCharsets.UTF_8),</span>
+<span class="fc" id="L177">				base64encodedPayload.getBytes(StandardCharsets.UTF_8));</span>
+
+<span class="fc" id="L179">		String singSt = Base64.getUrlEncoder().withoutPadding().encodeToString(sing);</span>
+
+<span class="fc" id="L181">		return ecdsaAlgorithm.concatJwt(base64encodedHeader.getBytes(StandardCharsets.UTF_8),</span>
+<span class="fc" id="L182">				base64encodedPayload.getBytes(StandardCharsets.UTF_8), singSt.getBytes(StandardCharsets.UTF_8));</span>
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

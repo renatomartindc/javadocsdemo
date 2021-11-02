@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IdentityNativeImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.nat</a> &gt; <span class="el_source">IdentityNativeImpl.java</span></div><h1>IdentityNativeImpl.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.nat;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.web3j.crypto.Credentials;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.JsonRpc2_0Web3j;
+import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.EthCall;
+import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.Log;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.exceptions.TransactionException;
+import org.web3j.tx.Contract;
+import org.web3j.tx.TransactionManager;
+import org.web3j.tx.response.PollingTransactionReceiptProcessor;
+import org.web3j.tx.response.TransactionReceiptProcessor;
+import org.web3j.utils.Numeric;
+import org.web3j.utils.Strings;
+
+import id.kaytrust.core.utils.didconnect.EthereumKeyUtils;
+import id.kaytrust.core.utils.enums.CapabilityEnum;
+import id.kaytrust.core.utils.exception.CapabilityException;
+import id.kaytrust.core.utils.exception.ContractException;
+import id.kaytrust.core.utils.misc.EthCoreUtils;
+import id.kaytrust.core.utils.misc.MnidUtils;
+import id.kaytrust.core.utils.model.did.DidScheme1;
+import id.kaytrust.core.utils.nat.lib.Decode;
+import id.kaytrust.core.utils.nat.lib.HttpService;
+import id.kaytrust.core.utils.nat.lib.RawTransactionManager;
+import lombok.extern.slf4j.Slf4j;
+
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">@Slf4j</span>
+public class IdentityNativeImpl implements IdentityNative {
+
+    private Web3j web3j;
+    private String contractAddress;
+    private int blockTime;
+
+<span class="fc" id="L44">    public IdentityNativeImpl(String host, String token, String contractAddress, int blockTime) {</span>
+
+<span class="fc" id="L46">        HttpService httpService = new HttpService(host);</span>
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">        if (!Strings.isEmpty(token)) {</span>
+<span class="fc" id="L48">            Map&lt;String, String&gt; header = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L49">            header.put(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L50">            httpService.addHeaders(header);</span>
+        }
+<span class="fc" id="L52">        this.web3j = Web3j.build(httpService);</span>
+<span class="fc" id="L53">        this.contractAddress = contractAddress;</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">        this.blockTime = blockTime == 0 ? JsonRpc2_0Web3j.DEFAULT_BLOCK_TIME : blockTime;</span>
+
+<span class="fc" id="L56">    }</span>
+
+    @Override
+    public boolean hasCap(String addressFrom, String proxy, String device, String cap) throws IOException {
+
+<span class="fc" id="L61">        String data = IdentityByteCode.getHasCap(proxy, device, cap);</span>
+
+<span class="fc" id="L63">        EthCall ethCall = web3j.ethCall(Transaction.createEthCallTransaction(addressFrom, this.contractAddress, data),</span>
+<span class="fc" id="L64">                DefaultBlockParameterName.LATEST).send();</span>
+
+<span class="fc" id="L66">        return Decode.decodeBool(ethCall.getValue());</span>
+    }
+
+    @Override
+    public boolean registeredIdentities(String addressFrom, String proxy) throws IOException {
+
+<span class="fc" id="L72">        String data = IdentityByteCode.registeredIdentities(proxy);</span>
+
+<span class="fc" id="L74">        EthCall ethCall = web3j.ethCall(Transaction.createEthCallTransaction(addressFrom, this.contractAddress, data),</span>
+<span class="fc" id="L75">                DefaultBlockParameterName.LATEST).send();</span>
+
+<span class="fc" id="L77">        return Decode.decodeBool(ethCall.getValue());</span>
+    }
+
+    @Override
+    public String forward(String privateKey, String proxy, String addressContractDestination, String encodedFunction,
+            double factor) throws IOException, TransactionException, CapabilityException {
+
+<span class="fc" id="L84">        boolean hasAdmin = hasCap(EthereumKeyUtils.getAddressFromPrivateKey(privateKey), proxy,</span>
+<span class="fc" id="L85">                EthereumKeyUtils.getAddressFromPrivateKey(privateKey), CapabilityEnum.FORWARD.description());</span>
+<span class="fc" id="L86">        log.info(&quot;hasAdmin {}&quot;, hasAdmin);</span>
+       
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        if (!hasAdmin) {</span>
+<span class="nc" id="L89">            throw new CapabilityException(&quot;AddressManager &quot; + EthereumKeyUtils.getAddressFromPrivateKey(privateKey)</span>
+<span class="nc" id="L90">                    + &quot;, PROXY &quot; + proxy + &quot; Capability not allowed &quot; + CapabilityEnum.FORWARD.description());</span>
+        }
+
+<span class="fc" id="L93">        BigInteger gasPrice = EthCoreUtils.getGasPrice(web3j);</span>
+<span class="fc" id="L94">        String data = IdentityByteCode.forwardTo(proxy, addressContractDestination, BigInteger.ZERO, encodedFunction);</span>
+
+<span class="fc" id="L96">        TransactionManager txManager = new RawTransactionManager(web3j, Credentials.create(privateKey), factor);</span>
+<span class="fc" id="L97">        EthSendTransaction response = txManager.sendTransaction(gasPrice, null, contractAddress, data, BigInteger.ZERO);</span>
+
+<span class="fc" id="L99">        TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(web3j, blockTime,</span>
+                TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+
+<span class="fc" id="L102">        TransactionReceipt receipt = receiptProcessor.waitForTransactionReceipt(response.getResult());</span>
+
+<span class="pc bpc" id="L104" title="2 of 4 branches missed.">        assert (receipt != null);</span>
+
+<span class="fc" id="L106">        return response.getResult();</span>
+    }
+
+    @Override
+    public String setCap(String privateKey, String proxy, String device, String cap, BigInteger startDate,
+            BigInteger endDate, double factor) throws IOException, TransactionException, CapabilityException {
+    
+<span class="fc" id="L113">        boolean hasAdmin = hasCap(EthereumKeyUtils.getAddressFromPrivateKey(privateKey), proxy,</span>
+<span class="fc" id="L114">                EthereumKeyUtils.getAddressFromPrivateKey(privateKey), CapabilityEnum.DEVICE_MANAGER.description());</span>
+<span class="fc" id="L115">        log.info(&quot;hasAdmin: {}&quot;, hasAdmin);</span>
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        if (!hasAdmin) {</span>
+<span class="nc" id="L117">            throw new CapabilityException(&quot;AddressManager: &quot; + EthereumKeyUtils.getAddressFromPrivateKey(privateKey)</span>
+<span class="nc" id="L118">                    + &quot;, PROXY: &quot; + proxy + &quot; Capability not allowed: &quot; + CapabilityEnum.DEVICE_MANAGER.description());</span>
+        }
+
+<span class="fc" id="L121">        BigInteger gasPrice = EthCoreUtils.getGasPrice(web3j);</span>
+
+<span class="fc" id="L123">        String encodedFunction = IdentityByteCode.setCap(proxy, device, cap, startDate, endDate);</span>
+
+<span class="fc" id="L125">        TransactionManager txManager = new RawTransactionManager(web3j, Credentials.create(privateKey), factor);</span>
+<span class="fc" id="L126">        EthSendTransaction response = txManager.sendTransaction(gasPrice, null, contractAddress, encodedFunction,</span>
+                BigInteger.ZERO);
+
+<span class="fc" id="L129">        TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(web3j, blockTime,</span>
+                TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+
+<span class="fc" id="L132">        TransactionReceipt receipt = receiptProcessor.waitForTransactionReceipt(response.getResult());</span>
+
+<span class="pc bpc" id="L134" title="2 of 4 branches missed.">        assert (receipt != null);</span>
+
+<span class="fc" id="L136">        return response.getResult();</span>
+    }
+
+    @Override
+    public String setDevice(String privateKey, String proxy, String device, BigInteger startDate,
+            BigInteger endDate, double factor) throws IOException, TransactionException, CapabilityException {
+    
+<span class="fc" id="L143">        boolean hasAdmin = hasCap(EthereumKeyUtils.getAddressFromPrivateKey(privateKey), proxy,</span>
+<span class="fc" id="L144">                EthereumKeyUtils.getAddressFromPrivateKey(privateKey), CapabilityEnum.DEVICE_MANAGER.description());</span>
+<span class="fc" id="L145">        log.info(&quot;hasAdmin: {}&quot;, hasAdmin);</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        if (!hasAdmin) {</span>
+<span class="nc" id="L147">            throw new CapabilityException(&quot;AddressManager: &quot; + EthereumKeyUtils.getAddressFromPrivateKey(privateKey)</span>
+<span class="nc" id="L148">                    + &quot;, PROXY: &quot; + proxy + &quot; Capability not allowed: &quot; + CapabilityEnum.DEVICE_MANAGER.description());</span>
+        }
+
+<span class="fc" id="L151">        BigInteger gasPrice = EthCoreUtils.getGasPrice(web3j);</span>
+
+<span class="fc" id="L153">        String encodedFunction = IdentityByteCode.setDevice(proxy, device, startDate, endDate);</span>
+
+<span class="fc" id="L155">        TransactionManager txManager = new RawTransactionManager(web3j, Credentials.create(privateKey), factor);</span>
+<span class="fc" id="L156">        EthSendTransaction response = txManager.sendTransaction(gasPrice, null, contractAddress, encodedFunction,</span>
+                BigInteger.ZERO);
+
+<span class="fc" id="L159">        TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(web3j, blockTime,</span>
+                TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+
+<span class="fc" id="L162">        TransactionReceipt receipt = receiptProcessor.waitForTransactionReceipt(response.getResult());</span>
+
+<span class="pc bpc" id="L164" title="2 of 4 branches missed.">        assert (receipt != null);</span>
+
+<span class="fc" id="L166">        return response.getResult();</span>
+    }
+
+    @Override
+    public String createIdentity(String privateKey, double factor) throws IOException, TransactionException {
+
+<span class="fc" id="L172">        final String createIdentitySha3 = &quot;0xac993fde3b9423ff59e4a23cded8e89074c9c8740920d1d870f586ba7c5c8cf0&quot;;</span>
+
+<span class="fc" id="L174">        BigInteger gasPrice = EthCoreUtils.getGasPrice(web3j);</span>
+<span class="fc" id="L175">        String netWorkId = getNetVersion();</span>
+
+<span class="fc" id="L177">        String encodedFunction = IdentityByteCode.getCreateIdentity();</span>
+
+<span class="fc" id="L179">        TransactionManager txManager = new RawTransactionManager(web3j, Credentials.create(privateKey), factor);</span>
+<span class="fc" id="L180">        EthSendTransaction response = txManager.sendTransaction(gasPrice, null, contractAddress, encodedFunction,</span>
+                BigInteger.ZERO);
+
+<span class="fc" id="L183">        TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(web3j, blockTime,</span>
+                TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+
+<span class="fc" id="L186">        TransactionReceipt receipt = receiptProcessor.waitForTransactionReceipt(response.getResult());</span>
+
+<span class="pc bpc" id="L188" title="1 of 2 branches missed.">        if (receipt == null) {</span>
+<span class="nc" id="L189">            throw new TransactionException(&quot;receipt is null with hash &quot; + response.getResult());</span>
+        }
+
+<span class="fc" id="L192">        String did = null;</span>
+
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">        for (Log logTx : receipt.getLogs()) {</span>
+<span class="fc bfc" id="L195" title="All 2 branches covered.">            if (logTx.getTopics().get(0).equals(createIdentitySha3)) {</span>
+
+<span class="fc" id="L197">                String proxy = Numeric.prependHexPrefix(logTx.getData().substring(logTx.getData().length() - 40));</span>
+
+<span class="fc" id="L199">                did = new DidScheme1(MnidUtils.encode(netWorkId, proxy)).toString();</span>
+
+<span class="fc" id="L201">                log.info(&quot;proxy:{}, net:{}, did:{}&quot;, proxy, netWorkId, did);</span>
+<span class="fc" id="L202">                break;</span>
+            }
+<span class="fc" id="L204">        }</span>
+<span class="fc" id="L205">        return did;</span>
+    }
+
+    @Override
+    public String getNetVersion() throws IOException {
+<span class="fc" id="L210">        return EthCoreUtils.getNetVersion(web3j);</span>
+    }
+
+    @Override
+    public String deploySmartContract(String privateKey) throws IOException, ContractException {
+
+<span class="fc" id="L216">        BigInteger gasPrice = EthCoreUtils.getGasPrice(web3j);</span>
+
+        IdentityContract contract;
+
+<span class="fc" id="L220">        TransactionManager rawTransactionManager = new RawTransactionManager(web3j, Credentials.create(privateKey),</span>
+                1.4);
+
+        try {
+
+<span class="fc" id="L225">            contract = Contract.deployRemoteCall(IdentityContract.class, web3j, rawTransactionManager, gasPrice, null,</span>
+<span class="fc" id="L226">                    IdentityContract.BINARY, &quot;&quot;).send();</span>
+<span class="nc" id="L227">        } catch (Exception e) {</span>
+<span class="nc" id="L228">            log.error(&quot;Error.deploy&quot;, e);</span>
+<span class="nc" id="L229">            throw new ContractException(e.getMessage(), e);</span>
+<span class="fc" id="L230">        }</span>
+
+<span class="fc" id="L232">        log.info(&quot;IdentityNativeImpl.deploy.new.ContractAddress: {}&quot;, contract.getContractAddress());</span>
+
+<span class="fc" id="L234">        this.contractAddress = contract.getContractAddress();</span>
+
+<span class="fc" id="L236">        return this.contractAddress;</span>
+
+    }
+
+    @Override
+    public void shutdown() {
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">        if (web3j != null)</span>
+<span class="fc" id="L243">            web3j.shutdown();</span>
+
+<span class="fc" id="L245">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

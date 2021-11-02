@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProductByteCode.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.nat</a> &gt; <span class="el_source">ProductByteCode.java</span></div><h1>ProductByteCode.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.nat;
+
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
+
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Bool;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.generated.Uint256;
+
+import id.kaytrust.core.utils.nat.lib.ProducType;
+
+public class ProductByteCode {
+
+<span class="nc" id="L18">    ProductByteCode(){}</span>
+
+    private static final String FUNC_SETPRODUCT = &quot;setProduct&quot;;
+
+    private static final String FUNC_GETPRODUCT = &quot;getProduct&quot;;
+
+    public static final String FUNC_UPDATEPRODUCT = &quot;updateProduct&quot;;
+
+    public static final String FUNC_ADDLIMITEDPRODUCTMAINTAINER = &quot;addLimitedProductMaintainer&quot;;
+
+    public static String addProduct(BigInteger price, String productIdentifier, String recipient, BigInteger stock, Boolean enabled) {
+<span class="fc" id="L29">        final Function function = new Function(</span>
+                FUNC_SETPRODUCT, 
+<span class="fc" id="L31">                Arrays.asList(new Uint256(price), </span>
+                new Address(160, productIdentifier), 
+                new Address(160, recipient), 
+                new Uint256(stock),
+                new Bool(enabled)), 
+<span class="fc" id="L36">                Collections.&lt;TypeReference&lt;?&gt;&gt;emptyList());</span>
+<span class="fc" id="L37">        return FunctionEncoder.encode(function);</span>
+    }
+    
+    public static String updateProduct(BigInteger price, String productIdentifier, String recipient, BigInteger stock, Boolean enabled) {
+<span class="fc" id="L41">        final Function function = new Function(</span>
+                FUNC_UPDATEPRODUCT, 
+<span class="fc" id="L43">                Arrays.asList(new Uint256(price), </span>
+                new Address(160, productIdentifier), 
+                new Address(160, recipient), 
+                new Uint256(stock), 
+                new Bool(enabled)), 
+<span class="fc" id="L48">                Collections.&lt;TypeReference&lt;?&gt;&gt;emptyList());</span>
+                
+<span class="fc" id="L50">                return FunctionEncoder.encode(function);</span>
+    }
+
+    public static Function getProduct(String productIdentifier) {
+<span class="fc" id="L54">        return new Function(FUNC_GETPRODUCT, </span>
+<span class="fc" id="L55">                Arrays.asList(new Address(160, productIdentifier)), </span>
+<span class="fc" id="L56">                Arrays.asList(new TypeReference&lt;ProducType&gt;() {}));</span>
+         
+    }
+ 
+    public static String addLimitedProductMaintainer(String addressContract) {
+<span class="fc" id="L61">        final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function(</span>
+                FUNC_ADDLIMITEDPRODUCTMAINTAINER, 
+<span class="fc" id="L63">                Arrays.asList(new org.web3j.abi.datatypes.Address(160, addressContract)), </span>
+<span class="fc" id="L64">                Collections.&lt;TypeReference&lt;?&gt;&gt;emptyList());</span>
+<span class="fc" id="L65">                return FunctionEncoder.encode(function);</span>
+    }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

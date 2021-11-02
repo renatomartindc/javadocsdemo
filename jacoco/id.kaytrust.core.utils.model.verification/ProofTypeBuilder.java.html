@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProofTypeBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.model.verification</a> &gt; <span class="el_source">ProofTypeBuilder.java</span></div><h1>ProofTypeBuilder.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.model.verification;
+
+import java.io.IOException;
+
+import org.web3j.protocol.exceptions.TransactionException;
+
+import id.kaytrust.core.utils.exception.CapabilityException;
+import id.kaytrust.core.utils.exception.MnidInvalidAddressException;
+import id.kaytrust.core.utils.nat.IdentityNative;
+import id.kaytrust.core.utils.nat.VerifyNative;
+import id.kaytrust.proof.util.CheckProof;
+
+public interface ProofTypeBuilder {
+
+	&lt;T&gt; String generateProof(VerifiableCredential&lt;T&gt; vc, String issuer, IdentityNative identityNative,
+			String privateKey, String addressContractDestination, double factor) throws MnidInvalidAddressException, IOException, TransactionException, CapabilityException ;
+
+	ProofType getProofType();
+
+	String getVc(String vc);
+
+	default &lt;T&gt; String buildProof(VerifiableCredential&lt;T&gt; vc, String issuer, IdentityNative identityNative,
+			String privateKey, String addressContractDestination, double factor) throws MnidInvalidAddressException, IOException, TransactionException, CapabilityException {
+<span class="fc" id="L24">		vc.setProof(getProofType());</span>
+<span class="fc" id="L25">		return generateProof(vc, issuer, identityNative, privateKey,</span>
+				addressContractDestination, factor);
+	}
+
+	&lt;T&gt; String addProof(VerifiableCredential&lt;T&gt; vc, String netWorkId, String addressContract);
+
+	CheckProof checkProof(VerifyNative verification, String addressFrom, String addressContract, String vc, String did)
+			throws MnidInvalidAddressException, IOException;
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

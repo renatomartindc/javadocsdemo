@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProducType.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.nat.lib</a> &gt; <span class="el_source">ProducType.java</span></div><h1>ProducType.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.nat.lib;
+
+import java.math.BigInteger;
+
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Bool;
+
+import org.web3j.abi.datatypes.generated.Uint256;
+import lombok.Getter;
+import lombok.Setter;
+
+import org.web3j.abi.datatypes.StaticStruct;
+
+@Getter
+<span class="nc" id="L15">@Setter</span>
+public class ProducType extends StaticStruct {
+<span class="fc" id="L17">    private BigInteger price;</span>
+
+<span class="fc" id="L19">    private String recipient;</span>
+
+<span class="fc" id="L21">    private BigInteger stock;</span>
+
+<span class="fc" id="L23">    private Boolean enabled;</span>
+
+    public ProducType(BigInteger price, String recipient, BigInteger stock, Boolean enabled) {
+<span class="nc" id="L26">        super(new Uint256(price),new Address(recipient),new Uint256(stock),new Bool(enabled));</span>
+<span class="nc" id="L27">        this.price = price;</span>
+<span class="nc" id="L28">        this.recipient = recipient;</span>
+<span class="nc" id="L29">        this.stock = stock;</span>
+<span class="nc" id="L30">        this.enabled = enabled;</span>
+<span class="nc" id="L31">    }</span>
+
+    public ProducType(Uint256 price, Address recipient, Uint256 stock, Bool enabled) {
+<span class="fc" id="L34">        super(price,recipient,stock,enabled);</span>
+<span class="fc" id="L35">        this.price = price.getValue();</span>
+<span class="fc" id="L36">        this.recipient = recipient.getValue();</span>
+<span class="fc" id="L37">        this.stock = stock.getValue();</span>
+<span class="fc" id="L38">        this.enabled = enabled.getValue();</span>
+<span class="fc" id="L39">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

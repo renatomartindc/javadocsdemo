@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Utils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.misc</a> &gt; <span class="el_source">Utils.java</span></div><h1>Utils.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.misc;
+
+import java.math.BigInteger;
+import java.util.Collections;
+import java.util.Optional;
+
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.exceptions.TransactionException;
+import org.web3j.utils.Numeric;
+import org.web3j.utils.Strings;
+
+public class Utils {
+
+<span class="nc" id="L14">	Utils() {</span>
+<span class="nc" id="L15">	}</span>
+
+	public static final String IDENTITY_NOT_PRIVILEGES = &quot;user does not have sufficient privileges&quot;;
+
+	public static byte[] stringToBytes(String string, int lenght) {
+<span class="fc" id="L20">		byte[] byteValue = string.getBytes();</span>
+<span class="fc" id="L21">		byte[] byteValueLen = new byte[lenght];</span>
+<span class="fc" id="L22">		System.arraycopy(byteValue, 0, byteValueLen, 0, byteValue.length);</span>
+<span class="fc" id="L23">		return byteValueLen;</span>
+	}
+
+	private static String getRevertReason(String revertReason) {
+<span class="nc" id="L27">		String errorMethodId = &quot;0x08c379a0&quot;; // Numeric.toHexString(Hash.sha3(&quot;Error(string)&quot;.getBytes())).substring(0,</span>
+												// 10)
+<span class="nc bnc" id="L29" title="All 4 branches missed.">		if (revertReason != null &amp;&amp; revertReason.startsWith(errorMethodId)) {</span>
+<span class="nc" id="L30">			return hexToAscii(revertReason.substring(errorMethodId.length())).trim();</span>
+		}
+<span class="nc" id="L32">		return revertReason;</span>
+	}
+
+	public static String getRevertReason(Exception e) {
+<span class="nc bnc" id="L36" title="All 2 branches missed.">		if (e instanceof TransactionException) {</span>
+<span class="nc" id="L37">			TransactionException tx = (TransactionException) e;</span>
+<span class="nc" id="L38">			Optional&lt;TransactionReceipt&gt; op = tx.getTransactionReceipt();</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">			if (op.isPresent()) {</span>
+<span class="nc" id="L40">				return Utils.getRevertReason(op.get().getRevertReason());</span>
+			}
+		}
+<span class="nc bnc" id="L43" title="All 2 branches missed.">		return e != null ? e.getMessage() : &quot;&quot;;</span>
+	}
+
+	public static String hexToAscii(String hexStr) {
+<span class="nc" id="L47">		StringBuilder output = new StringBuilder(&quot;&quot;);</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">		for (int i = 0; i &lt; hexStr.length(); i += 2) {</span>
+<span class="nc" id="L49">			String str = hexStr.substring(i, i + 2);</span>
+<span class="nc" id="L50">			output.append((char) Integer.parseInt(str, 16));</span>
+		}
+<span class="nc" id="L52">		return output.toString();</span>
+	}
+
+	public static String getHexBlank(String value) {
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		return Strings.isEmpty(value) ? &quot;0x0000000000000000000000000000000000000000000000000000000000000000&quot; : value;</span>
+	}
+
+	public static byte[] stringToBytes32Solidity(String string) {
+<span class="nc" id="L60">		return Numeric.hexStringToByteArray(asciiToHex32(string));</span>
+
+	}
+
+	public static byte[] stringToBytes6Solidity(String string) {
+<span class="nc" id="L65">		return Numeric.hexStringToByteArray(asciiToHex6(string));</span>
+	}
+
+	private static String asciiToHex32(String asciiValue) {
+<span class="nc" id="L69">		char[] chars = asciiValue.toCharArray();</span>
+<span class="nc" id="L70">		StringBuilder hex = new StringBuilder();</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		for (int i = 0; i &lt; chars.length; i++) {</span>
+<span class="nc" id="L72">			hex.append(Integer.toHexString((int) chars[i]));</span>
+		}
+<span class="nc" id="L74">		return hex.toString() + String.join(&quot;&quot;, Collections.nCopies(32 - (hex.length() / 2), &quot;00&quot;));</span>
+	}
+
+	private static String asciiToHex6(String asciiValue) {
+<span class="nc" id="L78">		char[] chars = asciiValue.toCharArray();</span>
+<span class="nc" id="L79">		StringBuilder hex = new StringBuilder();</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		for (int i = 0; i &lt; chars.length; i++) {</span>
+<span class="nc" id="L81">			hex.append(Integer.toHexString((int) chars[i]));</span>
+		}
+<span class="nc" id="L83">		return hex.toString() + String.join(&quot;&quot;, Collections.nCopies(6 - (hex.length() / 2), &quot;00&quot;));</span>
+	}
+
+	public static byte[] decode(String hexString) {
+<span class="fc" id="L87">		byte[] byteArray = new BigInteger(hexString, 16).toByteArray();</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">		if (byteArray[0] == 0) {</span>
+<span class="nc" id="L89">			byte[] output = new byte[byteArray.length - 1];</span>
+<span class="nc" id="L90">			System.arraycopy(byteArray, 1, output, 0, output.length);</span>
+<span class="nc" id="L91">			return output;</span>
+		}
+<span class="fc" id="L93">		return byteArray;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

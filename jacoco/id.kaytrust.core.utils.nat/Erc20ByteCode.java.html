@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Erc20ByteCode.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.nat</a> &gt; <span class="el_source">Erc20ByteCode.java</span></div><h1>Erc20ByteCode.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.nat;
+
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
+
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Utf8String;
+import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.abi.datatypes.generated.Uint8;
+
+public class Erc20ByteCode {
+
+    private static final String FUNC_BALANCEOF = &quot;balanceOf&quot;;
+    private static final String FUNC_MINT = &quot;mint&quot;;
+    private static final String FUNC_SYMBOL = &quot;symbol&quot;;
+    private static final String FUNC_TOTALSUPPLY = &quot;totalSupply&quot;;
+    private static final String FUNC_TRANSFER = &quot;transfer&quot;;
+    private static final String FUNC_TRANSFERFROM = &quot;transferFrom&quot;;
+    private static final String FUNC_DECIMALS = &quot;decimals&quot;;
+    private static final String FUNC_NAME = &quot;name&quot;;
+    private static final String FUNC_OWNER = &quot;owner&quot;;
+    private static final String FUNC_TRANSFEROWNERSHIP = &quot;transferOwnership&quot;;
+    private static final String FUNC_SETVALIDATIONRULESCONTRACTADDRESS = &quot;setValidationRulesContractAddress&quot;;
+    private static final String FUNC_GETVALIDATIONRULESCONTRACTADDRESS = &quot;getValidationRulesContractAddress&quot;;
+    private static final String FUNC_SETADDRESSASPRODUCTIDENTIFIER = &quot;setAddressAsProductIdentifier&quot;;
+    private static final String FUNC_APPROVE = &quot;approve&quot;;
+    private static final String FUNC_BURN = &quot;burn&quot;;
+    private static final String FUNC_BURNFROM = &quot;burnFrom&quot;;
+
+    private Erc20ByteCode() {
+    }
+
+    public static Function symbol() {
+        
+<span class="fc" id="L39">        return  new Function(</span>
+                FUNC_SYMBOL, 
+<span class="fc" id="L41">                Arrays.asList(),</span>
+<span class="fc" id="L42">                Arrays.asList(new TypeReference&lt;Utf8String&gt;() {}));</span>
+
+    }
+
+
+    public static Function totalSupply() {
+        
+<span class="fc" id="L49">        return new Function(</span>
+                FUNC_TOTALSUPPLY, 
+<span class="fc" id="L51">                Arrays.asList(), </span>
+<span class="fc" id="L52">                Arrays.asList(new TypeReference&lt;Uint256&gt;() {}));</span>
+
+    }
+
+
+    public static Function balanceOf(String account) {
+        
+<span class="fc" id="L59">        return new Function(</span>
+                FUNC_BALANCEOF, 
+<span class="fc" id="L61">                Arrays.asList(new Address(160, account)), </span>
+<span class="fc" id="L62">                Arrays.asList(new TypeReference&lt;Uint256&gt;() {}));</span>
+
+    }
+
+
+    public static Function decimals() { 
+        
+<span class="fc" id="L69">        return new Function(</span>
+                FUNC_DECIMALS, 
+<span class="fc" id="L71">                Arrays.asList(), </span>
+<span class="fc" id="L72">                Arrays.asList(new TypeReference&lt;Uint8&gt;() {}));</span>
+    }
+
+
+    public static Function name() {
+        
+<span class="nc" id="L78">        return new Function(</span>
+                FUNC_NAME, 
+<span class="nc" id="L80">                Arrays.asList(), </span>
+<span class="nc" id="L81">                Arrays.asList(new TypeReference&lt;Utf8String&gt;() {}));</span>
+
+    }
+
+
+    public static Function owner() { 
+        
+<span class="fc" id="L88">        return new Function(</span>
+                FUNC_OWNER, 
+<span class="fc" id="L90">                Arrays.asList(), </span>
+<span class="fc" id="L91">                Arrays.asList(new TypeReference&lt;Address&gt;() {}));</span>
+
+    }
+
+    public static String transfer(String recipient, BigInteger amount) {
+        
+<span class="fc" id="L97">        final Function function = new Function(</span>
+                FUNC_TRANSFER, 
+<span class="fc" id="L99">                Arrays.asList(new Address(160, recipient), </span>
+                new Uint256(amount)), 
+<span class="fc" id="L101">                Collections.emptyList());</span>
+
+<span class="fc" id="L103">        return FunctionEncoder.encode(function);</span>
+    }
+
+
+    public static String transferFrom(String sender, String recipient, BigInteger amount) {
+        
+<span class="fc" id="L109">        final Function function = new Function(</span>
+                FUNC_TRANSFERFROM, 
+<span class="fc" id="L111">                Arrays.asList(</span>
+                new Address(160, sender), 
+                new Address(160, recipient), 
+                new Uint256(amount)), 
+<span class="fc" id="L115">                Collections.emptyList());</span>
+
+<span class="fc" id="L117">        return FunctionEncoder.encode(function);</span>
+    }
+
+    public static String transferOwnership(String newOwner) {
+        
+<span class="nc" id="L122">        final Function function = new Function(</span>
+                FUNC_TRANSFEROWNERSHIP, 
+<span class="nc" id="L124">                Arrays.asList(new Address(160, newOwner)), </span>
+<span class="nc" id="L125">                Collections.emptyList());</span>
+
+<span class="nc" id="L127">        return FunctionEncoder.encode(function);</span>
+    }
+
+
+    public static String mint(String to, BigInteger amount) {
+        
+<span class="fc" id="L133">        final Function function = new Function(</span>
+                FUNC_MINT, 
+<span class="fc" id="L135">                Arrays.asList(new Address(160, to),</span>
+                new Uint256(amount)),
+<span class="fc" id="L137">                Collections.emptyList());</span>
+
+<span class="fc" id="L139">        return FunctionEncoder.encode(function);</span>
+    }
+
+
+    public static String setContractValidationRules(String addressContractRules) {
+<span class="fc" id="L144">        final Function function = new Function(</span>
+                FUNC_SETVALIDATIONRULESCONTRACTADDRESS, 
+<span class="fc" id="L146">                Arrays.asList(new Address(160, addressContractRules)), </span>
+<span class="fc" id="L147">                Collections.emptyList());</span>
+        
+<span class="fc" id="L149">        return FunctionEncoder.encode(function);</span>
+    }
+
+    public static String setProductIdentifier(String addressIdentifierProduct) {
+<span class="fc" id="L153">        final Function function = new Function(</span>
+                FUNC_SETADDRESSASPRODUCTIDENTIFIER, 
+<span class="fc" id="L155">                Arrays.asList(new Address(160, addressIdentifierProduct)), </span>
+<span class="fc" id="L156">                Collections.emptyList());</span>
+        
+<span class="fc" id="L158">        return FunctionEncoder.encode(function);</span>
+    }
+
+    public static Function getContractValidationRules() {
+<span class="fc" id="L162">        return new Function(FUNC_GETVALIDATIONRULESCONTRACTADDRESS, </span>
+<span class="fc" id="L163">                Arrays.asList(), </span>
+<span class="fc" id="L164">                Arrays.asList(new TypeReference&lt;Address&gt;() {}));</span>
+
+    }
+
+    public static String approve(String spender, BigInteger amount) {
+<span class="fc" id="L169">        final Function function = new Function(</span>
+                FUNC_APPROVE, 
+<span class="fc" id="L171">                Arrays.asList(new Address(160, spender), </span>
+                new Uint256(amount)), 
+<span class="fc" id="L173">                Collections.emptyList());</span>
+        
+<span class="fc" id="L175">        return FunctionEncoder.encode(function);</span>
+    }
+
+    public static String burn(BigInteger amount) {
+<span class="fc" id="L179">        final Function function = new Function(</span>
+                FUNC_BURN, 
+<span class="fc" id="L181">                Arrays.asList(new Uint256(amount)), </span>
+<span class="fc" id="L182">                Collections.emptyList());</span>
+<span class="fc" id="L183">                return FunctionEncoder.encode(function);</span>
+    }
+
+    public static String burnFrom(String account, BigInteger amount) {
+<span class="nc" id="L187">        final Function function = new Function(</span>
+                FUNC_BURNFROM, 
+<span class="nc" id="L189">                Arrays.asList(new Address(160, account), </span>
+                new Uint256(amount)), 
+<span class="nc" id="L191">                Collections.emptyList());</span>
+<span class="nc" id="L192">                return FunctionEncoder.encode(function);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

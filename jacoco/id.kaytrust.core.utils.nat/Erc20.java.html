@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Erc20.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.nat</a> &gt; <span class="el_source">Erc20.java</span></div><h1>Erc20.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.nat;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.exceptions.TransactionException;
+
+public interface Erc20 {
+    /**
+     * Create instance ERC 20 
+     * @param host node ethereum
+     * @param token access token 
+     * @param contractAddress address contract erc20
+     * @param blockTime time of minning
+     * @return instence Erc20
+     */
+    public static Erc20 build(String host, String token, String contractAddress, int blockTime) {
+<span class="fc" id="L20">        return new Erc20Impl(host, token, contractAddress, blockTime);</span>
+    }
+    /**
+     * Creates amount tokens and assigns them to account, increasing the total supply.
+     * Emits a Transfer event with from set to the zero address.
+     * @param privateKey who do transaction only owner of contract
+     * @param to address who receive the tokens
+     * @param amount cannot be the zero address.
+     * @param factor calculate gas 
+     * @return hash of transaction
+     * @throws IOException error of net
+     * @throws TransactionException error of transaction
+     */
+    String mint(String privateKey, String to, BigInteger amount,double factor) throws IOException, TransactionException;
+
+    /**
+     * Moves `amount` tokens from the caller's account to `recipient`.
+     * Returns a boolean value indicating whether the operation succeeded.
+     * when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
+     * will be transferred to `to`.
+     * - when `from` is zero, `amount` tokens will be minted for `to`.
+     * - when `to` is zero, `amount` of ``from``'s tokens will be burned.
+     * - `from` and `to` are never both zero.
+     * Emits a {Transfer} event.
+     * @param privateKey who do transaction, the caller must have a balance of at least amount
+     * @param recipient who receive amount is address, cannot be the zero address
+     * @param amount cannot be the zero address.
+     * @param factor calculate gas 
+     * @return hash of transaction
+     * @throws IOException error of net
+     * @throws TransactionException error of transaction
+     */
+    String transfer(String privateKey, String recipient, BigInteger amount, double factor) throws IOException, TransactionException;
+    
+    /**
+     * Moves `amount` tokens from `sender` to `recipient` using the
+     * allowance mechanism. `amount` is then deducted from the caller's
+     * allowance.
+     *
+     * Returns a boolean value indicating whether the operation succeeded.
+     *
+     * Emits a {Transfer} event.
+     * @param privateKey who do transaction owner of sender
+     * @param sender who do transaction is address
+     * @param recipient who receive amount is address
+     * @param amount cannot be the zero address.
+     * @param factor calculate gas 
+     * @return hash of transaction
+     * @throws IOException error of net
+     * @throws TransactionException error of transaction
+     */
+    String transferFrom(String privateKey, String sender, String recipient, BigInteger amount, double factor) throws IOException, TransactionException;
+    
+    /**
+     * Returns the symbol of the token, usually a shorter version of the
+     * name.
+     * @param addressQuery who do query
+     * @return symbol
+     * @throws IOException error of net
+     */
+    String symbol(String addressQuery) throws IOException ;
+
+    /**
+     * Returns the amount of tokens in existence.
+     * @param addressQuery who do query
+     * @return the amount of tokens 
+     * @throws IOException error of net
+     */
+    BigInteger totalSupply(String addressQuery) throws IOException;
+
+    /**
+     * Returns the amount of tokens owned by `account`.
+     * @param addressQuery who do query
+     * @param account address of query
+     * @return the amount of tokens owned by `account`
+     * @throws IOException error of net
+     */
+    BigInteger balanceOf(String addressQuery, String account) throws IOException;
+
+    /**
+     * Returns the number of decimals used to get its user representation.
+     * For example, if `decimals` equals `2`, a balance of `505` tokens should
+     * be displayed to a user as `5.05` (`505 / 10 ** 2`).
+     *
+     * Tokens usually opt for a value of 18, imitating the relationship between
+     * Ether and Wei. This is the value {ERC20} uses, unless this function is
+     * overridden;
+     *
+     * NOTE: This information is only used for _display_ purposes: it in
+     * no way affects any of the arithmetic of the contract, including
+     * {IERC20-balanceOf} and {IERC20-transfer}.
+     * @param addressQuery who do query
+     * @return the number of decimals
+     * @throws IOException error of net
+     */
+    BigInteger decimals(String addressQuery) throws IOException ;
+
+    /**
+     * Returns the name of the token.
+     * @param addressQuery who do query
+     * @return the name of the token.
+     * @throws IOException error of net
+     */
+    String name(String addressQuery) throws IOException ;
+
+    /**
+     * Who is owner of contract
+     * @param addressQuery  who do query
+     * @return address owner of contract
+     * @throws IOException error of net
+     */
+    String owner(String addressQuery) throws IOException;
+
+    /**
+     * Returns Version of Network
+     * @return version of network in hexa
+     * @throws IOException error of net
+     */
+    String getNetVersion() throws IOException;
+
+    /**
+     * close the connection
+     */
+    void shutdown();
+
+    /**
+     * Set contract rules 
+     * @param privateKey who do transaction owner of sender
+     * @param addressContractRules address Contract rules who validate transactions
+     * @param factor calculate gas 
+     * @return hash of transaction
+     * @throws IOException error of net
+     * @throws TransactionException error of transaction
+     */
+    String setContractValidationRules(String privateKey, String addressContractRules, double factor) throws IOException, TransactionException;
+
+    /**
+     * Set product identifier
+     * @param privateKey who do transaction owner of sender
+     * @param addressIdentifierProduct address identifier product
+     * @param factor calculate gas 
+     * @return hash of transaction
+     * @throws IOException error of net
+     * @throws TransactionException error of transaction
+     */
+    String setProductIdentifier(String privateKey, String addressIdentifierProduct, double factor) throws IOException, TransactionException;
+
+    /**
+     * Get contract validator
+     * @param addressQuery  who do query
+     * @return address contract validator
+     * @throws IOException error of net
+     */
+    String getContractValidationRules(String addressQuery) throws IOException;
+
+    /**
+     * Approve sender with amount
+     * @param privateKey who do transaction owner of sender
+     * @param spender address
+     * @param amount  cannot be the zero address.
+     * @param factor 
+     * @param factor calculate gas 
+     * @return hash of transaction
+     * @throws IOException error of net
+     * @throws TransactionException error of transaction
+     */
+    String approve(String privateKey, String spender, BigInteger amount, double factor) throws IOException, TransactionException;
+
+    String mint(String privateKey, String encodedFunction, double factor, 
+    
+    BigInteger gasPrice, BigInteger nonce, BigInteger gasLimit) throws IOException;
+
+    BigInteger getEstimateGasLimit(String privateKey, String to, String data, BigDecimal factor) throws IOException;
+
+    BigInteger getNonce(String privateKey) throws IOException ;
+
+    BigInteger getGasPrice( ) throws IOException ;
+
+    TransactionReceipt getTx(String txHash) throws IOException, TransactionException ;
+
+    String burn(String privateKey, BigInteger amount, double factor)  throws IOException, TransactionException;
+
+    String burnFrom(String privateKey, String account, BigInteger amount, double factor)  throws IOException, TransactionException;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

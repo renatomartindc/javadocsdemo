@@ -1,0 +1,97 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+KayTrust Core SDK,id.kaytrust.core.utils.nat.lib,ErrorEnums,34,0,0,0,2,0,1,0,1,0
+KayTrust Core SDK,id.kaytrust.core.utils.nat.lib,TransactionExecute,20,40,1,1,2,7,2,1,1,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat.lib,ResponseTransaction,8,15,0,0,1,6,2,3,2,3
+KayTrust Core SDK,id.kaytrust.core.utils.nat.lib,Decode,36,61,7,7,8,14,7,4,1,3
+KayTrust Core SDK,id.kaytrust.core.utils.nat.lib,ProducType,61,49,0,0,7,10,5,5,5,5
+KayTrust Core SDK,id.kaytrust.core.utils.nat.lib,RawTransactionManager,113,161,6,6,21,33,11,9,6,8
+KayTrust Core SDK,id.kaytrust.core.utils.nat.lib,EventDecode,3,71,1,5,1,15,2,4,1,2
+KayTrust Core SDK,id.kaytrust.core.utils.nat.lib,EventDecode.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat.lib,ErcUtil,3,28,0,0,1,4,1,2,1,2
+KayTrust Core SDK,id.kaytrust.core.utils.nat.lib,HttpService,97,246,7,7,23,44,14,13,8,12
+KayTrust Core SDK,id.kaytrust.core.utils.nat.lib,ProductBean,23,55,0,0,3,19,6,7,6,7
+KayTrust Core SDK,id.kaytrust.core.credential.ethereum.client,EthereumCredentialValidationImpl,30,109,8,10,6,26,8,4,0,3
+KayTrust Core SDK,id.kaytrust.core.credential.ethereum.client,EthereumCredentialValidation,0,8,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.didconnect,EthereumKeyUtils,91,126,4,2,16,27,7,5,4,5
+KayTrust Core SDK,id.kaytrust.core.utils.didconnect,Secp256k1Utils,42,214,9,9,6,42,9,5,1,4
+KayTrust Core SDK,id.kaytrust.core.utils.didconnect,Secp256k1Utils.new TypeToken() {...},0,3,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.didconnect,ECDSAHelper,56,390,14,20,13,81,14,12,0,9
+KayTrust Core SDK,id.kaytrust.core.utils.model.did,Did,0,32,0,0,0,5,0,6,0,6
+KayTrust Core SDK,id.kaytrust.core.utils.model.did,DidScheme1,0,9,0,0,0,4,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.misc,SslUtils,46,0,0,0,9,0,4,0,4,0
+KayTrust Core SDK,id.kaytrust.core.utils.misc,EthCoreUtils,39,81,4,0,8,13,4,5,2,5
+KayTrust Core SDK,id.kaytrust.core.utils.misc,HashUtils,15,43,0,0,5,13,3,5,3,5
+KayTrust Core SDK,id.kaytrust.core.utils.misc,Utils,187,28,19,1,33,7,19,2,9,2
+KayTrust Core SDK,id.kaytrust.core.utils.misc,MnidUtils,5,120,1,1,1,22,1,3,0,3
+KayTrust Core SDK,id.kaytrust.core.utils.misc,SslUtils.new X509TrustManager() {...},8,0,0,0,4,0,4,0,4,0
+KayTrust Core SDK,id.kaytrust.core.utils.misc,DidUtils,3,5,0,0,1,1,1,1,1,1
+KayTrust Core SDK,id.kaytrust.core.utils.misc,Base58,35,292,14,32,8,66,15,15,1,6
+KayTrust Core SDK,id.kaytrust.core.utils.enums,CapabilityEnum,0,59,0,0,0,9,0,3,0,3
+KayTrust Core SDK,id.kaytrust.core.identity.ethereum.client,EthereumIdentityConsumer,0,7,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.identity.ethereum.client,EthereumIdentityConsumerImpl,56,140,13,9,16,32,12,6,1,6
+KayTrust Core SDK,id.kaytrust.core.utils.didconnect.model.jwt,JwtPayload,6,39,0,0,2,6,2,11,2,11
+KayTrust Core SDK,id.kaytrust.core.utils.didconnect.model.jwt,JwtBean,15,19,0,0,2,6,4,3,4,3
+KayTrust Core SDK,id.kaytrust.core.utils.didconnect.model.jwt,JwtHeader,6,11,0,0,2,2,2,3,2,3
+KayTrust Core SDK,id.kaytrust.core.identity.ethereum.admin,EthereumIdentityManagerImpl,53,133,9,9,11,31,10,5,1,5
+KayTrust Core SDK,id.kaytrust.core.identity.ethereum.admin,EthereumIdentityManager,8,9,0,0,1,1,1,1,1,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,ProductByteCode.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,ProductByteCode,3,143,0,0,1,15,1,4,1,4
+KayTrust Core SDK,id.kaytrust.core.utils.nat,IdentityContract,0,8,0,0,0,2,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,VerifyContract,0,8,0,0,0,2,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,IdentityNative,0,8,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,ProductImpl,57,238,6,6,4,44,7,6,1,6
+KayTrust Core SDK,id.kaytrust.core.utils.nat,Erc20Impl,153,458,9,9,17,83,12,20,3,20
+KayTrust Core SDK,id.kaytrust.core.utils.nat,VerifyNative,0,6,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,IdentityNativeImpl,108,455,15,17,10,85,15,12,0,11
+KayTrust Core SDK,id.kaytrust.core.utils.nat,GeneralNativeImpl,0,66,2,2,0,16,2,5,0,5
+KayTrust Core SDK,id.kaytrust.core.utils.nat,Product,0,8,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,GeneralNative,0,6,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,VerifyNativeImpl,12,134,2,4,3,30,2,6,0,5
+KayTrust Core SDK,id.kaytrust.core.utils.nat,Erc20ByteCode.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,Erc20ByteCode.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+KayTrust Core SDK,id.kaytrust.core.utils.nat,Erc20ByteCode.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,Erc20ByteCode.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,Erc20ByteCode.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,IdentityByteCode,0,259,0,0,0,26,0,6,0,6
+KayTrust Core SDK,id.kaytrust.core.utils.nat,Erc20ByteCode.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,Erc20ByteCode.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,Erc20,0,8,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,VerificationByteCode,0,126,0,0,0,20,0,4,0,4
+KayTrust Core SDK,id.kaytrust.core.utils.nat,VerificationByteCode.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,VerificationByteCode.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,IdentityByteCode.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,IdentityByteCode.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.nat,Erc20ByteCode,64,285,0,0,11,46,3,13,3,13
+KayTrust Core SDK,id.kaytrust.core.utils.nat,GeneralNative.ERROR,24,0,0,0,1,0,1,0,1,0
+KayTrust Core SDK,id.kaytrust.core.utils.exception,JwtExpirationException,7,0,0,0,4,0,2,0,2,0
+KayTrust Core SDK,id.kaytrust.core.utils.exception,MnidInvalidAddressException,7,0,0,0,4,0,2,0,2,0
+KayTrust Core SDK,id.kaytrust.core.utils.exception,AudienceException,7,0,0,0,4,0,2,0,2,0
+KayTrust Core SDK,id.kaytrust.core.utils.exception,DidNotPresentIdentityManagerException,7,0,0,0,4,0,2,0,2,0
+KayTrust Core SDK,id.kaytrust.core.utils.exception,JwtVerifyException,7,0,0,0,4,0,2,0,2,0
+KayTrust Core SDK,id.kaytrust.core.utils.exception,UnsupportedProofTypeException,7,0,0,0,4,0,2,0,2,0
+KayTrust Core SDK,id.kaytrust.core.utils.exception,GenerateAddressException,7,0,0,0,4,0,2,0,2,0
+KayTrust Core SDK,id.kaytrust.core.utils.exception,ParamEmptyException,7,0,0,0,4,0,2,0,2,0
+KayTrust Core SDK,id.kaytrust.core.utils.exception,CapabilityException,7,0,0,0,4,0,2,0,2,0
+KayTrust Core SDK,id.kaytrust.core.utils.exception,VerificationException,8,0,0,0,4,0,2,0,2,0
+KayTrust Core SDK,id.kaytrust.core.utils.exception,TransactionError,4,0,0,0,2,0,1,0,1,0
+KayTrust Core SDK,id.kaytrust.core.utils.exception,ContractException,8,0,0,0,4,0,2,0,2,0
+KayTrust Core SDK,id.kaytrust.proof.util,VC2021,15,11,0,0,6,3,3,3,3,3
+KayTrust Core SDK,id.kaytrust.proof.util,CheckProof,11,15,0,0,3,6,3,3,3,3
+KayTrust Core SDK,id.kaytrust.proof.util,StrategyProof,0,38,0,0,0,7,0,2,0,2
+KayTrust Core SDK,id.kaytrust.proof.util,UtilProofType,15,68,11,9,4,13,10,3,1,2
+KayTrust Core SDK,id.kaytrust.proof,EthereumAttestation2019Builder,2,113,0,2,1,25,1,8,1,7
+KayTrust Core SDK,id.kaytrust.proof,EthereumAttestationSmartContractProofType,14,3,0,0,3,1,4,1,4,1
+KayTrust Core SDK,id.kaytrust.proof,EthereumAttestationEnum,0,34,0,0,0,4,0,1,0,1
+KayTrust Core SDK,id.kaytrust.proof,EthereumAttestationHashMethodEnum,24,0,0,0,3,0,1,0,1,0
+KayTrust Core SDK,id.kaytrust.proof,EthereumAttestationSmartContractBuilder,98,16,2,0,21,5,7,2,6,2
+KayTrust Core SDK,id.kaytrust.proof,EthereumAttestationRegistryIntermediateStatus2021Builder,54,67,2,0,10,16,3,5,2,5
+KayTrust Core SDK,id.kaytrust.proof,EthereumAttestation2019ProofType,6,11,0,0,2,2,2,3,2,3
+KayTrust Core SDK,id.kaytrust.proof,EthereumAttestation2021ProofType,6,11,0,0,2,2,2,3,2,3
+KayTrust Core SDK,id.kaytrust.core.utils.model.verification,ProofType,0,10,0,0,0,3,0,3,0,3
+KayTrust Core SDK,id.kaytrust.core.utils.model.verification,VerificationBuilder,60,45,4,2,13,10,4,3,2,2
+KayTrust Core SDK,id.kaytrust.core.utils.model.verification,VerifiableCredential,24,35,0,0,8,2,8,9,8,9
+KayTrust Core SDK,id.kaytrust.core.utils.model.verification,ProofTypeBuilder,0,13,0,0,0,2,0,1,0,1
+KayTrust Core SDK,id.kaytrust.core.utils.model,Account,0,21,0,0,0,8,0,4,0,4
+KayTrust Core SDK,id.kaytrust.core.utils.model,Mnid,11,15,0,0,2,6,3,3,3,3
+KayTrust Core SDK,id.kaytrust.core.credential.ethereum.admin,EthereumCredentialIssuer,9,10,0,0,1,1,1,1,1,1
+KayTrust Core SDK,id.kaytrust.core.credential.ethereum.admin,EthereumCredentialIssuerImpl,54,121,9,9,11,29,10,4,1,4

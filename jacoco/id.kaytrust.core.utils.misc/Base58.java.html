@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Base58.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.misc</a> &gt; <span class="el_source">Base58.java</span></div><h1>Base58.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.misc;
+
+public class Base58 {
+
+<span class="nc" id="L5">	Base58(){}</span>
+	
+<span class="fc" id="L7">	private static final char[] ALPHABET = &quot;123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz&quot;</span>
+<span class="fc" id="L8">			.toCharArray();</span>
+<span class="fc" id="L9">	private static final int BASE_58 = ALPHABET.length;</span>
+	private static final int BASE_256 = 256;
+
+<span class="fc" id="L12">	private static final int[] INDEXES = new int[128];</span>
+	static {
+<span class="fc bfc" id="L14" title="All 2 branches covered.">		for (int i = 0; i &lt; INDEXES.length; i++) {</span>
+<span class="fc" id="L15">			INDEXES[i] = -1;</span>
+		}
+<span class="fc bfc" id="L17" title="All 2 branches covered.">		for (int i = 0; i &lt; ALPHABET.length; i++) {</span>
+<span class="fc" id="L18">			INDEXES[ALPHABET[i]] = i;</span>
+		}
+<span class="fc" id="L20">	}</span>
+	
+	
+
+	public static String encode(byte[] input) {
+<span class="pc bpc" id="L25" title="1 of 2 branches missed.">		if (input.length == 0) {</span>
+			// paying with the same coin
+<span class="nc" id="L27">			return &quot;&quot;;</span>
+		}
+
+		//
+		// Make a copy of the input since we are going to modify it.
+		//
+<span class="fc" id="L33">		input = copyOfRange(input, 0, input.length);</span>
+
+		//
+		// Count leading zeroes
+		//
+<span class="fc" id="L38">		int zeroCount = 0;</span>
+<span class="pc bpc" id="L39" title="2 of 4 branches missed.">		while (zeroCount &lt; input.length &amp;&amp; input[zeroCount] == 0) {</span>
+<span class="nc" id="L40">			++zeroCount;</span>
+		}
+
+		//
+		// The actual encoding
+		//
+<span class="fc" id="L46">		byte[] temp = new byte[input.length * 2];</span>
+<span class="fc" id="L47">		int j = temp.length;</span>
+
+<span class="fc" id="L49">		int startAt = zeroCount;</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">		while (startAt &lt; input.length) {</span>
+<span class="fc" id="L51">			byte mod = divmod58(input, startAt);</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">			if (input[startAt] == 0) {</span>
+<span class="fc" id="L53">				++startAt;</span>
+			}
+
+<span class="fc" id="L56">			temp[--j] = (byte) ALPHABET[mod];</span>
+<span class="fc" id="L57">		}</span>
+
+		//
+		// Strip extra '1' if any
+		//
+<span class="pc bpc" id="L62" title="2 of 4 branches missed.">		while (j &lt; temp.length &amp;&amp; temp[j] == ALPHABET[0]) {</span>
+<span class="nc" id="L63">			++j;</span>
+		}
+
+		//
+		// Add as many leading '1' as there were leading zeros.
+		//
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">		while (--zeroCount &gt;= 0) {</span>
+<span class="nc" id="L70">			temp[--j] = (byte) ALPHABET[0];</span>
+		}
+
+<span class="fc" id="L73">		byte[] output = copyOfRange(temp, j, temp.length);</span>
+<span class="fc" id="L74">		return new String(output);</span>
+	}
+
+	public static byte[] decode(String input) {
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">		if (input.length() == 0) {</span>
+			// paying with the same coin
+<span class="nc" id="L80">			return new byte[0];</span>
+		}
+
+<span class="fc" id="L83">		byte[] input58 = new byte[input.length()];</span>
+		//
+		// Transform the String to a base58 byte sequence
+		//
+<span class="fc bfc" id="L87" title="All 2 branches covered.">		for (int i = 0; i &lt; input.length(); ++i) {</span>
+<span class="fc" id="L88">			char c = input.charAt(i);</span>
+
+<span class="fc" id="L90">			int digit58 = -1;</span>
+<span class="pc bpc" id="L91" title="2 of 4 branches missed.">			if (c &gt;= 0 &amp;&amp; c &lt; 128) {</span>
+<span class="fc" id="L92">				digit58 = INDEXES[c];</span>
+			}
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">			if (digit58 &lt; 0) {</span>
+<span class="nc" id="L95">				throw new RuntimeException(&quot;Not a Base58 input: &quot; + input);// NOSONAR</span>
+			}
+
+<span class="fc" id="L98">			input58[i] = (byte) digit58;</span>
+		}
+
+		//
+		// Count leading zeroes
+		//
+<span class="fc" id="L104">		int zeroCount = 0;</span>
+<span class="pc bpc" id="L105" title="2 of 4 branches missed.">		while (zeroCount &lt; input58.length &amp;&amp; input58[zeroCount] == 0) {</span>
+<span class="nc" id="L106">			++zeroCount;</span>
+		}
+
+		//
+		// The encoding
+		//
+<span class="fc" id="L112">		byte[] temp = new byte[input.length()];</span>
+<span class="fc" id="L113">		int j = temp.length;</span>
+
+<span class="fc" id="L115">		int startAt = zeroCount;</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">		while (startAt &lt; input58.length) {</span>
+<span class="fc" id="L117">			byte mod = divmod256(input58, startAt);</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">			if (input58[startAt] == 0) {</span>
+<span class="fc" id="L119">				++startAt;</span>
+			}
+
+<span class="fc" id="L122">			temp[--j] = mod;</span>
+<span class="fc" id="L123">		}</span>
+
+		//
+		// Do no add extra leading zeroes, move j to first non null byte.
+		//
+<span class="pc bpc" id="L128" title="1 of 4 branches missed.">		while (j &lt; temp.length &amp;&amp; temp[j] == 0) {</span>
+<span class="fc" id="L129">			++j;</span>
+		}
+
+<span class="fc" id="L132">		return copyOfRange(temp, j - zeroCount, temp.length);</span>
+	}
+
+	private static byte divmod58(byte[] number, int startAt) {
+<span class="fc" id="L136">		int remainder = 0;</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">		for (int i = startAt; i &lt; number.length; i++) {</span>
+<span class="fc" id="L138">			int digit256 = (int) number[i] &amp; 0xFF;</span>
+<span class="fc" id="L139">			int temp = remainder * BASE_256 + digit256;</span>
+
+<span class="fc" id="L141">			number[i] = (byte) (temp / BASE_58);</span>
+
+<span class="fc" id="L143">			remainder = temp % BASE_58;</span>
+		}
+
+<span class="fc" id="L146">		return (byte) remainder;</span>
+	}
+
+	private static byte divmod256(byte[] number58, int startAt) {
+<span class="fc" id="L150">		int remainder = 0;</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">		for (int i = startAt; i &lt; number58.length; i++) {</span>
+<span class="fc" id="L152">			int digit58 = (int) number58[i] &amp; 0xFF;</span>
+<span class="fc" id="L153">			int temp = remainder * BASE_58 + digit58;</span>
+
+<span class="fc" id="L155">			number58[i] = (byte) (temp / BASE_256);</span>
+
+<span class="fc" id="L157">			remainder = temp % BASE_256;</span>
+		}
+
+<span class="fc" id="L160">		return (byte) remainder;</span>
+	}
+
+	private static byte[] copyOfRange(byte[] source, int from, int to) {
+<span class="fc" id="L164">		byte[] range = new byte[to - from];</span>
+<span class="fc" id="L165">		System.arraycopy(source, from, range, 0, range.length);</span>
+
+<span class="fc" id="L167">		return range;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

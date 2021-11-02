@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TransactionExecute.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.nat.lib</a> &gt; <span class="el_source">TransactionExecute.java</span></div><h1>TransactionExecute.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.nat.lib;
+
+import java.io.IOException;
+import java.math.BigInteger;
+
+import org.web3j.crypto.Credentials;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.exceptions.TransactionException;
+import org.web3j.tx.TransactionManager;
+import org.web3j.tx.response.PollingTransactionReceiptProcessor;
+import org.web3j.tx.response.TransactionReceiptProcessor;
+
+import id.kaytrust.core.utils.misc.EthCoreUtils;
+import id.kaytrust.core.utils.nat.GeneralNative;
+
+public class TransactionExecute {
+
+<span class="nc" id="L20">    TransactionExecute(){}</span>
+
+    public static ResponseTransaction process(Web3j web3j,String contractAddress, String privateKey, String encodedFunction,long blockTime, double factor) throws IOException, TransactionException{
+<span class="fc" id="L23">        BigInteger gasPrice = EthCoreUtils.getGasPrice(web3j);</span>
+    
+<span class="fc" id="L25">        TransactionManager txManager = new RawTransactionManager(web3j, Credentials.create(privateKey), factor);</span>
+        
+<span class="fc" id="L27">        EthSendTransaction response = txManager.sendTransaction(gasPrice, null, contractAddress, encodedFunction,</span>
+                BigInteger.ZERO);
+
+<span class="fc" id="L30">        TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(web3j, blockTime,</span>
+                TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+
+<span class="fc" id="L33">        TransactionReceipt receipt = receiptProcessor.waitForTransactionReceipt(response.getResult());</span>
+
+  
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">        if (receipt == null) {</span>
+<span class="nc" id="L37">            throw new TransactionException(GeneralNative.ERROR.RECEIPT_EMPTY.name() + &quot;:&quot; + response.getResult());</span>
+        }
+
+<span class="fc" id="L40">        return new ResponseTransaction(response, receipt);</span>
+    }
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

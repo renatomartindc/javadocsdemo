@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HttpService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.nat.lib</a> &gt; <span class="el_source">HttpService.java</span></div><h1>HttpService.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.nat.lib;
+
+import static okhttp3.ConnectionSpec.CLEARTEXT;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.google.gson.Gson;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.web3j.protocol.Service;
+import org.web3j.protocol.core.Response;
+import org.web3j.protocol.exceptions.ClientConnectionException;
+
+import id.kaytrust.core.utils.exception.TransactionError;
+import okhttp3.CipherSuite;
+import okhttp3.ConnectionSpec;
+import okhttp3.Headers;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import okhttp3.logging.HttpLoggingInterceptor;
+
+/** HTTP implementation of our services API. */
+public class HttpService extends Service {
+
+    /** Copied from {@link ConnectionSpec#APPROVED_CIPHER_SUITES}. */
+
+<span class="fc" id="L37">    private static final CipherSuite[] INFURA_CIPHER_SUITES = new CipherSuite[] {</span>
+            CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+            CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384, CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+            CipherSuite.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+            CipherSuite.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+
+            // Note that the following cipher suites are all on HTTP/2's bad cipher suites
+            // list.
+            // We'll
+            // continue to include them until better suites are commonly available. For
+            // example,
+            // none
+            // of the better cipher suites listed above shipped with Android 4.4 or Java 7.
+            CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA, CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+            CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA, CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+            CipherSuite.TLS_RSA_WITH_AES_128_GCM_SHA256, CipherSuite.TLS_RSA_WITH_AES_256_GCM_SHA384,
+            CipherSuite.TLS_RSA_WITH_AES_128_CBC_SHA, CipherSuite.TLS_RSA_WITH_AES_256_CBC_SHA,
+            CipherSuite.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+
+            // Additional INFURA CipherSuites
+            CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256, CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,
+            CipherSuite.TLS_RSA_WITH_AES_128_CBC_SHA256, CipherSuite.TLS_RSA_WITH_AES_256_CBC_SHA256 };
+
+<span class="fc" id="L60">    private static final ConnectionSpec INFURA_CIPHER_SUITE_SPEC = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)</span>
+<span class="fc" id="L61">            .cipherSuites(INFURA_CIPHER_SUITES).build();</span>
+
+    /** The list of {@link ConnectionSpec} instances used by the connection. */
+<span class="fc" id="L64">    private static final List&lt;ConnectionSpec&gt; CONNECTION_SPEC_LIST = Arrays.asList(INFURA_CIPHER_SUITE_SPEC, CLEARTEXT);</span>
+
+<span class="fc" id="L66">    public static final MediaType JSON_MEDIA_TYPE = MediaType.parse(&quot;application/json; charset=utf-8&quot;);</span>
+
+    public static final String DEFAULT_URL = &quot;http://localhost:8545/&quot;;
+
+<span class="fc" id="L70">    private static final Logger log = LoggerFactory.getLogger(HttpService.class);</span>
+
+    private OkHttpClient httpClient;
+
+    private final String url;
+
+<span class="fc" id="L76">    private HashMap&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+
+    public HttpService(String url, OkHttpClient httpClient, boolean includeRawResponses) {
+<span class="fc" id="L79">        super(includeRawResponses);</span>
+<span class="fc" id="L80">        this.url = url;</span>
+<span class="fc" id="L81">        this.httpClient = httpClient;</span>
+<span class="fc" id="L82">    }</span>
+
+    public HttpService(OkHttpClient httpClient, boolean includeRawResponses) {
+<span class="nc" id="L85">        this(DEFAULT_URL, httpClient, includeRawResponses);</span>
+<span class="nc" id="L86">    }</span>
+
+    public HttpService(String url, OkHttpClient httpClient) {
+<span class="fc" id="L89">        this(url, httpClient, false);</span>
+<span class="fc" id="L90">    }</span>
+
+    public HttpService(String url) {
+<span class="fc" id="L93">        this(url, createOkHttpClient());</span>
+<span class="fc" id="L94">    }</span>
+
+    public HttpService(String url, boolean includeRawResponse) {
+<span class="nc" id="L97">        this(url, createOkHttpClient(), includeRawResponse);</span>
+<span class="nc" id="L98">    }</span>
+
+    public HttpService(OkHttpClient httpClient) {
+<span class="nc" id="L101">        this(DEFAULT_URL, httpClient);</span>
+<span class="nc" id="L102">    }</span>
+
+    public HttpService(boolean includeRawResponse) {
+<span class="nc" id="L105">        this(DEFAULT_URL, includeRawResponse);</span>
+<span class="nc" id="L106">    }</span>
+
+    public HttpService() {
+<span class="nc" id="L109">        this(DEFAULT_URL);</span>
+<span class="nc" id="L110">    }</span>
+
+    private static OkHttpClient createOkHttpClient() {
+<span class="fc" id="L113">        final OkHttpClient.Builder builder = new OkHttpClient.Builder().connectionSpecs(CONNECTION_SPEC_LIST);</span>
+<span class="fc" id="L114">        configureLogging(builder);</span>
+<span class="fc" id="L115">        return builder.build();</span>
+    }
+
+    private static void configureLogging(OkHttpClient.Builder builder) {
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">        if (log.isDebugEnabled()) {</span>
+<span class="nc" id="L120">            HttpLoggingInterceptor logging = new HttpLoggingInterceptor(log::debug);</span>
+<span class="nc" id="L121">            logging.setLevel(HttpLoggingInterceptor.Level.BODY);</span>
+<span class="nc" id="L122">            builder.addInterceptor(logging);</span>
+        }
+<span class="fc" id="L124">    }</span>
+
+    @Override
+    protected InputStream performIO(String request) throws IOException {
+        @SuppressWarnings( &quot;deprecation&quot; )
+<span class="fc" id="L129">        RequestBody requestBody = RequestBody.create(JSON_MEDIA_TYPE, request);</span>
+
+<span class="fc" id="L131">        okhttp3.Request httpRequest = new okhttp3.Request.Builder().url(url).headers(buildHeaders()).post(requestBody)</span>
+<span class="fc" id="L132">                .build();</span>
+
+<span class="fc" id="L134">        okhttp3.Response response = httpClient.newCall(httpRequest).execute();</span>
+       
+
+<span class="fc" id="L137">        processHeaders(response.headers());</span>
+        
+<span class="fc" id="L139">        ResponseBody responseBody = response.body();</span>
+        
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">        if (response.isSuccessful()) {</span>
+            
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">            if (responseBody != null) {</span>
+<span class="fc" id="L144">                return buildInputStream(responseBody);</span>
+            } else {
+<span class="nc" id="L146">                return null;</span>
+            }
+        } else {
+<span class="nc" id="L149">            int code = response.code();</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">            String text = responseBody == null ? &quot;N/A&quot; : responseBody.string();</span>
+
+<span class="nc" id="L152">            throw new ClientConnectionException(&quot;Invalid response received: &quot; + code + &quot;; &quot; + text);</span>
+        }
+    }
+
+    protected void processHeaders(Headers headers) {
+        // Default implementation is empty
+<span class="fc" id="L158">    }</span>
+
+    private InputStream buildInputStream(ResponseBody responseBody) throws IOException {
+<span class="fc" id="L161">        InputStream input = responseBody.byteStream();</span>
+<span class="fc" id="L162">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+
+        // Code simulating the copy
+        // You could alternatively use NIO
+        // And please, unlike me, do something about the Exceptions :D
+<span class="fc" id="L167">        byte[] buffer = new byte[1024];</span>
+        int len;
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        while ((len = input.read(buffer)) &gt; -1 ) {</span>
+<span class="fc" id="L170">            baos.write(buffer, 0, len);</span>
+        }
+<span class="fc" id="L172">        baos.flush();</span>
+            
+        // Open new InputStreams using recorded bytes
+        // Can be repeated as many times as you wish
+<span class="fc" id="L176">        byte[] sourc = baos.toByteArray();</span>
+ 
+<span class="fc" id="L178">        Response&lt;?&gt; resp = new Gson().fromJson(new String(sourc), Response.class);</span>
+<span class="pc bpc" id="L179" title="2 of 4 branches missed.">        if(resp!=null &amp;&amp; resp.hasError()){</span>
+<span class="nc" id="L180">            log.error(&quot;ERROR: {}&quot;,resp.getError().getMessage());</span>
+<span class="nc" id="L181">            throw new TransactionError(resp.getError().getMessage());</span>
+        }
+       
+
+<span class="fc" id="L185">        return new ByteArrayInputStream(sourc);</span>
+    }
+
+    private Headers buildHeaders() {
+<span class="fc" id="L189">        return Headers.of(headers);</span>
+    }
+
+    public void addHeader(String key, String value) {
+<span class="nc" id="L193">        headers.put(key, value);</span>
+<span class="nc" id="L194">    }</span>
+
+    public void addHeaders(Map&lt;String, String&gt; headersToAdd) {
+<span class="fc" id="L197">        headers.putAll(headersToAdd);</span>
+<span class="fc" id="L198">    }</span>
+
+    public Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L201">        return headers;</span>
+    }
+
+    public String getUrl() {
+<span class="nc" id="L205">        return url;</span>
+    }
+
+    @Override
+    public void close() throws IOException {
+        // Add a nested comment explaining why this method is empty
+<span class="fc" id="L211">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VerifyNativeImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.nat</a> &gt; <span class="el_source">VerifyNativeImpl.java</span></div><h1>VerifyNativeImpl.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.nat;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.web3j.abi.DefaultFunctionReturnDecoder;
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.crypto.Credentials;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.EthCall;
+import org.web3j.tx.Contract;
+import org.web3j.tx.TransactionManager;
+import org.web3j.utils.Strings;
+
+import id.kaytrust.core.utils.exception.ContractException;
+import id.kaytrust.core.utils.misc.EthCoreUtils;
+import id.kaytrust.core.utils.nat.lib.HttpService;
+import id.kaytrust.core.utils.nat.lib.RawTransactionManager;
+import lombok.extern.slf4j.Slf4j;
+
+<span class="fc" id="L29">@Slf4j</span>
+public class VerifyNativeImpl implements VerifyNative {
+
+    private Web3j web3j;
+
+<span class="fc" id="L34">    public VerifyNativeImpl(String host, String token) {</span>
+<span class="fc" id="L35">        HttpService httpService = new HttpService(host);</span>
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">        if (!Strings.isEmpty(token)) {</span>
+<span class="fc" id="L37">            Map&lt;String, String&gt; header = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L38">            header.put(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L39">            httpService.addHeaders(header);</span>
+        }
+<span class="fc" id="L41">        web3j = Web3j.build(httpService);</span>
+<span class="fc" id="L42">    }</span>
+
+    @Override
+    public List&lt;BigInteger&gt; verifications(String addressFrom, String contractAddress, String proxy, String vc)
+            throws IOException {
+
+<span class="fc" id="L48">        Function function = VerificationByteCode.getVerifications(vc, proxy);</span>
+
+<span class="fc" id="L50">        EthCall ethCall = web3j.ethCall(</span>
+<span class="fc" id="L51">                Transaction.createEthCallTransaction(addressFrom, contractAddress, FunctionEncoder.encode(function)),</span>
+<span class="fc" id="L52">                DefaultBlockParameterName.LATEST).send();</span>
+
+        @SuppressWarnings(&quot;rawtypes&quot;)
+<span class="fc" id="L55">        List&lt;Type&gt; results = new DefaultFunctionReturnDecoder().decodeFunctionResult(ethCall.getValue(),</span>
+<span class="fc" id="L56">                function.getOutputParameters());</span>
+
+<span class="fc" id="L58">        List&lt;BigInteger&gt; dates = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (results.size() &gt; 1) {</span>
+<span class="fc" id="L60">            dates.add((BigInteger) (results.get(0).getValue()));</span>
+<span class="fc" id="L61">            dates.add((BigInteger) (results.get(1).getValue()));</span>
+        }
+<span class="fc" id="L63">        return dates;</span>
+    }
+
+    @Override
+    public String deploySmartContract(String privateKey) throws IOException, ContractException {
+
+<span class="fc" id="L69">        BigInteger gasPrice = EthCoreUtils.getGasPrice(web3j);</span>
+
+<span class="fc" id="L71">        TransactionManager rawTransactionManager = new RawTransactionManager(web3j, Credentials.create(privateKey),</span>
+                1.4);
+        VerifyContract contract;
+        try {
+<span class="fc" id="L75">            contract = Contract.deployRemoteCall(VerifyContract.class, web3j, rawTransactionManager, gasPrice, null,</span>
+<span class="fc" id="L76">                    VerifyContract.BINARY, &quot;&quot;).send();</span>
+<span class="nc" id="L77">        } catch (Exception e) {</span>
+<span class="nc" id="L78">            log.error(&quot;Error.deploy&quot;, e);</span>
+<span class="nc" id="L79">            throw new ContractException(e.getMessage(), e);</span>
+<span class="fc" id="L80">        }</span>
+
+<span class="fc" id="L82">        log.info(&quot;VerifyNative.deploy.new.ContractAddress: {}&quot;, contract.getContractAddress());</span>
+
+<span class="fc" id="L84">        return contract.getContractAddress();</span>
+
+    }
+
+    @Override
+    public void shutdown() {
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        if (web3j != null)</span>
+<span class="fc" id="L91">            web3j.shutdown();</span>
+
+<span class="fc" id="L93">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

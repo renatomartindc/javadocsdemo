@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EthereumIdentityManagerImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.identity.ethereum.admin</a> &gt; <span class="el_source">EthereumIdentityManagerImpl.java</span></div><h1>EthereumIdentityManagerImpl.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.identity.ethereum.admin;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Date;
+
+import org.web3j.protocol.core.JsonRpc2_0Web3j;
+import org.web3j.protocol.exceptions.TransactionException;
+import org.web3j.utils.Strings;
+
+import id.kaytrust.core.utils.didconnect.EthereumKeyUtils;
+import id.kaytrust.core.utils.exception.CapabilityException;
+import id.kaytrust.core.utils.exception.MnidInvalidAddressException;
+import id.kaytrust.core.utils.exception.ParamEmptyException;
+import id.kaytrust.core.utils.misc.DidUtils;
+import id.kaytrust.core.utils.misc.MnidUtils;
+import id.kaytrust.core.utils.nat.IdentityNative;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * This implementation is designed to work with Ethereum Networks. At a high
+ * level a user or an administrator can use an instance of this class to create
+ * an identity and authorize a user's device public key to access its identity.
+ * &lt;p&gt;
+ * The &quot;identity concept&quot; is materialized through a Proxy smart contract. Each
+ * user is able to create its own identity in two ways:
+ * &lt;/p&gt;
+ * &lt;ul&gt;
+ * &lt;li&gt;by deploying a new Proxy instance directly.
+ * &lt;/ul&gt;
+ * &lt;ul&gt;
+ * &lt;li&gt;By using an Identity Manager smart contract instance.
+ * &lt;/ul&gt;
+ * &lt;p&gt;
+ * Even when it is possible to give a direct access of a running instance of
+ * this class, the design is intended to allow access to only an admin of an
+ * identity Provider.
+ * &lt;/p&gt;
+ * From the flow view when an identity provider admin uses this instance, it
+ * connects to an Identity Manager Contract instance that lives on the Ethereum
+ * network. As mentioned above, if an admin wants to create a Proxy (on behalf
+ * of a final user) the Identity Manager Contract will deploy Proxy smart
+ * contract instance and also will authorize the end user's device to access the
+ * newly deployed Proxy instance.
+ * 
+ * @author Egdard Espinoza Rivas
+ * @author Erick Pacheco Pedraza
+ *
+ */
+<span class="fc" id="L50">@Slf4j</span>
+public class EthereumIdentityManagerImpl implements EthereumIdentityManager {
+
+	private String privateKey;
+	private String contractAddress;
+	private String host;
+	private String token;
+	private int blockTime;
+
+	/**
+	 * Sets an instance to interact with the Identity Manager ethereum smart
+	 * contract.
+	 * 
+	 * @param hostRpc         host and port where ethereum node serves RPC requests
+	 * @param token           can be blank, is token field Authorization
+	 * @param privateKey      The private key used to interact with the smart
+	 *                        contract.
+	 * @param contractAddress Contract Address Identity Manager.
+	 * @param blockTime 	  time mining of block in milliseconds, it's optional by default it's 15000
+	 * @throws ParamEmptyException if a required parameter is empty.
+	 */
+	public EthereumIdentityManagerImpl(String hostRpc, String token, String privateKey, String contractAddress, int blockTime)
+<span class="fc" id="L72">			throws ParamEmptyException {</span>
+				
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">		if (Strings.isEmpty(hostRpc)) {</span>
+<span class="nc" id="L75">			throw new ParamEmptyException(&quot;hostRpc&quot;);</span>
+		}
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">		if (Strings.isEmpty(privateKey)) {</span>
+<span class="nc" id="L78">			throw new ParamEmptyException(&quot;privateKey&quot;);</span>
+		}
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">		if (Strings.isEmpty(contractAddress)) {</span>
+<span class="nc" id="L81">			throw new ParamEmptyException(&quot;contractAddress&quot;);</span>
+		}
+<span class="fc" id="L83">		this.host = hostRpc;</span>
+<span class="fc" id="L84">		this.token = token;</span>
+<span class="fc" id="L85">		this.privateKey = privateKey;</span>
+<span class="fc" id="L86">		this.contractAddress = contractAddress;</span>
+<span class="fc" id="L87">		this.blockTime = blockTime;</span>
+
+<span class="fc" id="L89">	}</span>
+
+
+	/**
+	 * Sets an instance to interact with the Identity Manager ethereum smart
+	 * contract.
+	 * 
+	 * @param hostRpc         host and port where ethereum node serves RPC requests
+	 * @param token           can be blank, is token field Authorization
+	 * @param privateKey      The private key used to interact with the smart
+	 *                        contract.
+	 * @param contractAddress Contract Address Identity Manager.
+	 * @throws ParamEmptyException if a required parameter is empty.
+	 */
+	public EthereumIdentityManagerImpl(String hostRpc, String token, String privateKey, String contractAddress)
+			throws ParamEmptyException {
+<span class="nc" id="L105">				this(hostRpc,token, privateKey,contractAddress,  JsonRpc2_0Web3j.DEFAULT_BLOCK_TIME);</span>
+
+<span class="nc" id="L107">	}</span>
+
+
+
+	/**
+	 * Internal method. Authorizes a device's address to access a
+	 * &lt;a href=&quot;http://developer.kaytrust.id/Manuals/#types-of-contracts&quot;&gt;Proxy
+	 * smart contract instance&lt;/a&gt;
+	 * 
+	 * @param proxy         proxy is address did
+	 * @param addressDevice address publickey
+	 * @param capability    capability example: fw, auth, devicemanager and admin
+	 * @throws IOException          network exception
+	 * @throws TransactionException transaction in blockchain error
+	 * @throws ParamEmptyException  if a required parameter is empty.
+	 * @throws CapabilityException  capability no present
+	 */
+	public void setCap(String proxy, String addressDevice, String capability)
+			throws IOException, TransactionException, ParamEmptyException, CapabilityException {
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">		if (Strings.isEmpty(proxy)) {</span>
+<span class="nc" id="L127">			throw new ParamEmptyException(&quot;proxy&quot;);</span>
+		}
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">		if (Strings.isEmpty(addressDevice)) {</span>
+<span class="nc" id="L130">			throw new ParamEmptyException(&quot;addressDevice&quot;);</span>
+		}
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">		if (Strings.isEmpty(capability)) {</span>
+<span class="nc" id="L133">			throw new ParamEmptyException(&quot;capability&quot;);</span>
+		}
+<span class="fc" id="L135">		IdentityNative identityNative = IdentityNative.build(host, token, contractAddress, this.blockTime);</span>
+		try {
+
+<span class="fc" id="L138">			long time = new Date().getTime() / 1000;</span>
+
+<span class="fc" id="L140">			String tx = identityNative.setCap(privateKey, proxy, addressDevice, capability, BigInteger.valueOf(time),</span>
+<span class="fc" id="L141">					BigInteger.valueOf(0), 1.5);</span>
+
+<span class="fc" id="L143">			log.info(&quot;[setCap] proxy:{}, addressdevice:{}, tx:{}&quot;, proxy, addressDevice, tx);</span>
+
+		} finally {
+<span class="fc" id="L146">			identityNative.shutdown();</span>
+		}
+<span class="fc" id="L148">	}</span>
+
+	@Override
+	/**
+	 * Authorizes a user's device address to access its identity. The Identity
+	 * implemetation depends of the blockchain network that is used.
+	 * 
+	 * @param did             The &lt;a target=&quot;_blank&quot; href=
+	 *                        &quot;https://www.w3.org/2019/09/did-wg-charter.html#:~:text=Decentralized%20Identifiers%20(DIDs)%20are%20a,identity%20provider%2C%20or%20certificate%20authority.&quot;&gt;Decentralized
+	 *                        identifier&lt;/a&gt;.
+	 * @param devicePublicKey The public key associated with a user's device
+	 * @param capability      The capability that grants authorization to the user's
+	 *                        device over an identity living on a DLT.
+	 * @throws IOException                 network exception
+	 * @throws MnidInvalidAddressException mnid format error
+	 * @throws TransactionException        transaction in blockchain error
+	 * @throws CapabilityException  capability no present
+	 */
+	public void authorizeDevice(String did, String publicKeyDevice, String capability)
+			throws MnidInvalidAddressException, IOException, TransactionException, ParamEmptyException, CapabilityException {
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">		if (Strings.isEmpty(did)) {</span>
+<span class="nc" id="L169">			throw new ParamEmptyException(&quot;did&quot;);</span>
+		}
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">		if (Strings.isEmpty(publicKeyDevice)) {</span>
+<span class="nc" id="L172">			throw new ParamEmptyException(&quot;publicKeyDevice&quot;);</span>
+		}
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">		if (Strings.isEmpty(capability)) {</span>
+<span class="nc" id="L175">			throw new ParamEmptyException(&quot;capability&quot;);</span>
+		}
+<span class="fc" id="L177">		String specificIdentifier = DidUtils.getSpecificIdentifierFromDid(did);</span>
+
+<span class="fc" id="L179">		String proxy = MnidUtils.decode(specificIdentifier).getAddress();</span>
+
+<span class="fc" id="L181">		setCap(proxy, EthereumKeyUtils.getAddressFromPublicKey(publicKeyDevice), capability);</span>
+
+<span class="fc" id="L183">	}</span>
+
+	@Override
+	/**
+	 * This method allows to create an identity (Proxy Contract) through the
+	 * identity manager smart contract.
+	 * &lt;p&gt;
+	 * The Proxy Contract is intended to represent users in the blockchain network.
+	 * Each user has a unique Proxy Smart contract instance.
+	 * 
+	 * @return The string that represents the contract address where the newly
+	 *         created Proxy Smart contract has been deployed.
+	 * @throws IOException          network exception
+	 * @throws TransactionException transaction in blockchain error
+	 */
+	public String createIdentity() throws IOException, TransactionException {
+<span class="fc" id="L199">		IdentityNative identityNative = IdentityNative.build(host, token, contractAddress, this.blockTime);</span>
+		try {
+<span class="fc" id="L201">			return identityNative.createIdentity(privateKey, 1.5);</span>
+		} finally {
+<span class="fc" id="L203">			identityNative.shutdown();</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Erc20Impl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.nat</a> &gt; <span class="el_source">Erc20Impl.java</span></div><h1>Erc20Impl.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.nat;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.crypto.Credentials;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.JsonRpc2_0Web3j;
+import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.EthCall;
+import org.web3j.protocol.core.methods.response.EthEstimateGas;
+import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
+import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.exceptions.TransactionException;
+import org.web3j.tx.TransactionManager;
+import org.web3j.tx.response.PollingTransactionReceiptProcessor;
+import org.web3j.tx.response.TransactionReceiptProcessor;
+import org.web3j.utils.Strings;
+
+import id.kaytrust.core.utils.didconnect.EthereumKeyUtils;
+import id.kaytrust.core.utils.exception.TransactionError;
+import id.kaytrust.core.utils.misc.EthCoreUtils;
+import id.kaytrust.core.utils.nat.lib.Decode;
+import id.kaytrust.core.utils.nat.lib.ErrorEnums;
+import id.kaytrust.core.utils.nat.lib.EventDecode;
+import id.kaytrust.core.utils.nat.lib.HttpService;
+import id.kaytrust.core.utils.nat.lib.RawTransactionManager;
+import id.kaytrust.core.utils.nat.lib.ResponseTransaction;
+import id.kaytrust.core.utils.nat.lib.TransactionExecute;
+
+public class Erc20Impl implements Erc20 {
+
+    private Web3j web3j;
+    private String contractAddress;
+    private int blockTime;
+
+<span class="fc" id="L44">    public Erc20Impl(String host, String token, String contractAddress, int blockTime) {</span>
+<span class="fc" id="L45">        HttpService httpService = new HttpService(host);</span>
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">        if (!Strings.isEmpty(token)) {</span>
+<span class="fc" id="L47">            Map&lt;String, String&gt; header = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L48">            header.put(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L49">            httpService.addHeaders(header);</span>
+        }
+<span class="fc" id="L51">        this.web3j = Web3j.build(httpService);</span>
+<span class="fc" id="L52">        this.contractAddress = contractAddress;</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">        this.blockTime = blockTime == 0 ? JsonRpc2_0Web3j.DEFAULT_BLOCK_TIME : blockTime;</span>
+<span class="fc" id="L54">    }</span>
+
+    @Override
+    public String mint(String privateKey, String to, BigInteger amount, double factor)
+            throws IOException, TransactionException {
+        // validations
+<span class="fc" id="L60">        String addressOwner = EthereumKeyUtils.getAddressFromPrivateKey(privateKey);</span>
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">        if (!owner(addressOwner).equals(addressOwner)) {</span>
+<span class="nc" id="L62">            throw new TransactionError(ErrorEnums.NO_OWNER.name() + &quot;:&quot; + addressOwner);</span>
+        }
+
+<span class="fc" id="L65">        String encodedFunction = Erc20ByteCode.mint(to, amount);</span>
+
+<span class="fc" id="L67">        ResponseTransaction response = TransactionExecute.process(web3j, contractAddress, privateKey, encodedFunction,</span>
+                blockTime, factor);
+
+<span class="fc" id="L70">        boolean bool = EventDecode.getValueEvent(response.getReceipt(), amount, EventDecode.EVENT_TRANSFER);</span>
+
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if (!bool) {</span>
+<span class="nc" id="L73">            throw new TransactionException(</span>
+<span class="nc" id="L74">                    GeneralNative.ERROR.RESULT_FALSE.name() + &quot;:&quot; + response.getEthSendTransaction().getResult());</span>
+        }
+
+<span class="fc" id="L77">        return response.getEthSendTransaction().getResult();</span>
+    }
+
+    @Override
+    public String mint(String privateKey, String encodedFunction, double factor, BigInteger gasPrice, BigInteger nonce,
+            BigInteger gasLimit) throws IOException {
+
+<span class="fc" id="L84">        RawTransactionManager txManager = new RawTransactionManager(web3j, Credentials.create(privateKey), factor);</span>
+
+<span class="fc" id="L86">        EthSendTransaction response = txManager.sendTransaction(gasPrice, nonce, gasLimit, contractAddress,</span>
+                encodedFunction, BigInteger.ZERO);
+
+<span class="fc" id="L89">        return response.getTransactionHash();</span>
+    }
+
+    @Override
+    public BigInteger getEstimateGasLimit(String privateKey, String to, String data, BigDecimal factor)
+            throws IOException {
+<span class="fc" id="L95">        Transaction tx = Transaction.createEthCallTransaction(Credentials.create(privateKey).getAddress(), to, data);</span>
+<span class="fc" id="L96">        EthEstimateGas ethEstimateGas = web3j.ethEstimateGas(tx).send();</span>
+<span class="fc" id="L97">        return factor.multiply(new BigDecimal(ethEstimateGas.getAmountUsed())).toBigInteger();</span>
+    }
+
+    @Override
+    public BigInteger getNonce(String privateKey) throws IOException {
+<span class="fc" id="L102">        EthGetTransactionCount ethGetTransactionCount = web3j</span>
+<span class="fc" id="L103">                .ethGetTransactionCount(Credentials.create(privateKey).getAddress(), DefaultBlockParameterName.LATEST)</span>
+<span class="fc" id="L104">                .send();</span>
+
+<span class="fc" id="L106">        return ethGetTransactionCount.getTransactionCount();</span>
+    }
+
+    @Override
+    public BigInteger getGasPrice() throws IOException {
+
+<span class="fc" id="L112">        return EthCoreUtils.getGasPrice(web3j);</span>
+    }
+
+    @Override
+    public TransactionReceipt getTx(String txHash) throws IOException, TransactionException {
+
+<span class="fc" id="L118">        TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(web3j, blockTime,</span>
+                TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+
+<span class="fc" id="L121">        return receiptProcessor.waitForTransactionReceipt(txHash);</span>
+
+    }
+
+    @Override
+    public String transfer(String privateKey, String recipient, BigInteger amount, double factor)
+            throws IOException, TransactionException {
+
+<span class="fc" id="L129">        String addressOwner = EthereumKeyUtils.getAddressFromPrivateKey(privateKey);</span>
+
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">        if (amount.signum() != 1) {</span>
+<span class="nc" id="L132">            throw new TransactionError(ErrorEnums.AMOUNT_EMPTY.name() + &quot;:&quot; + amount);</span>
+        }
+
+<span class="fc" id="L135">        BigInteger balance = balanceOf(addressOwner, addressOwner);</span>
+
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">        if (balance.compareTo(amount) &lt; 0) {</span>
+<span class="nc" id="L138">            throw new TransactionError(ErrorEnums.INSUFFICIENT_BALANCE.name() + &quot;:&quot; + balance + &quot;&lt;&quot; + amount);</span>
+        }
+
+<span class="fc" id="L141">        String encodedFunction = Erc20ByteCode.transfer(recipient, amount);</span>
+
+<span class="fc" id="L143">        ResponseTransaction response = TransactionExecute.process(web3j, contractAddress, privateKey, encodedFunction,</span>
+                blockTime, factor);
+
+<span class="fc" id="L146">        boolean bool = EventDecode.getValueEvent(response.getReceipt(), amount, EventDecode.EVENT_TRANSFER);</span>
+
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">        if (!bool) {</span>
+<span class="nc" id="L149">            throw new TransactionException(</span>
+<span class="nc" id="L150">                    GeneralNative.ERROR.RESULT_FALSE.name() + &quot;:&quot; + response.getEthSendTransaction().getResult());</span>
+        }
+<span class="fc" id="L152">        return response.getEthSendTransaction().getResult();</span>
+    }
+
+    @Override
+    public String transferFrom(String privateKey, String sender, String recipient, BigInteger amount, double factor)
+            throws IOException, TransactionException {
+
+<span class="fc" id="L159">        String encodedFunction = Erc20ByteCode.transferFrom(sender, recipient, amount);</span>
+
+<span class="fc" id="L161">        ResponseTransaction response = TransactionExecute.process(web3j, contractAddress, privateKey, encodedFunction,</span>
+                blockTime, factor);
+
+<span class="fc" id="L164">        boolean bool = EventDecode.getValueEvent(response.getReceipt(), amount, EventDecode.EVENT_TRANSFER);</span>
+
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">        if (!bool) {</span>
+<span class="nc" id="L167">            throw new TransactionException(</span>
+<span class="nc" id="L168">                    GeneralNative.ERROR.RESULT_FALSE.name() + &quot;:&quot; + response.getEthSendTransaction().getResult());</span>
+        }
+<span class="fc" id="L170">        return response.getEthSendTransaction().getResult();</span>
+    }
+
+    @Override
+    public String approve(String privateKey, String spender, BigInteger amount, double factor)
+            throws IOException, TransactionException {
+
+<span class="fc" id="L177">        String encodedFunction = Erc20ByteCode.approve(spender, amount);</span>
+
+<span class="fc" id="L179">        ResponseTransaction response = TransactionExecute.process(web3j, contractAddress, privateKey, encodedFunction,</span>
+                blockTime, factor);
+
+<span class="fc" id="L182">        return response.getEthSendTransaction().getResult();</span>
+    }
+
+    @Override
+    public String symbol(String addressQuery) throws IOException {
+
+<span class="fc" id="L188">        Function function = Erc20ByteCode.symbol();</span>
+
+<span class="fc" id="L190">        EthCall ethCall = web3j.ethCall(Transaction.createEthCallTransaction(addressQuery, this.contractAddress,</span>
+<span class="fc" id="L191">                FunctionEncoder.encode(function)), DefaultBlockParameterName.LATEST).send();</span>
+
+<span class="fc" id="L193">        return Decode.singleValueReturn(ethCall.getValue(), function.getOutputParameters(), String.class);</span>
+    }
+
+    @Override
+    public BigInteger totalSupply(String addressQuery) throws IOException {
+
+<span class="fc" id="L199">        Function function = Erc20ByteCode.totalSupply();</span>
+
+<span class="fc" id="L201">        EthCall ethCall = web3j.ethCall(Transaction.createEthCallTransaction(addressQuery, this.contractAddress,</span>
+<span class="fc" id="L202">                FunctionEncoder.encode(function)), DefaultBlockParameterName.LATEST).send();</span>
+
+<span class="fc" id="L204">        return Decode.singleValueReturn(ethCall.getValue(), function.getOutputParameters(), BigInteger.class);</span>
+    }
+
+    @Override
+    public BigInteger balanceOf(String addressQuery, String account) throws IOException {
+
+<span class="fc" id="L210">        Function function = Erc20ByteCode.balanceOf(account);</span>
+
+<span class="fc" id="L212">        EthCall ethCall = web3j.ethCall(Transaction.createEthCallTransaction(addressQuery, this.contractAddress,</span>
+<span class="fc" id="L213">                FunctionEncoder.encode(function)), DefaultBlockParameterName.LATEST).send();</span>
+
+<span class="fc" id="L215">        return Decode.singleValueReturn(ethCall.getValue(), function.getOutputParameters(), BigInteger.class);</span>
+    }
+
+    @Override
+    public BigInteger decimals(String addressQuery) throws IOException {
+
+<span class="fc" id="L221">        Function function = Erc20ByteCode.decimals();</span>
+
+<span class="fc" id="L223">        EthCall ethCall = web3j.ethCall(Transaction.createEthCallTransaction(addressQuery, this.contractAddress,</span>
+<span class="fc" id="L224">                FunctionEncoder.encode(function)), DefaultBlockParameterName.LATEST).send();</span>
+
+<span class="fc" id="L226">        return Decode.singleValueReturn(ethCall.getValue(), function.getOutputParameters(), BigInteger.class);</span>
+    }
+
+    @Override
+    public String name(String addressQuery) throws IOException {
+
+<span class="nc" id="L232">        Function function = Erc20ByteCode.name();</span>
+
+<span class="nc" id="L234">        EthCall ethCall = web3j.ethCall(Transaction.createEthCallTransaction(addressQuery, this.contractAddress,</span>
+<span class="nc" id="L235">                FunctionEncoder.encode(function)), DefaultBlockParameterName.LATEST).send();</span>
+
+<span class="nc" id="L237">        return Decode.singleValueReturn(ethCall.getValue(), function.getOutputParameters(), String.class);</span>
+    }
+
+    @Override
+    public String owner(String addressQuery) throws IOException {
+
+<span class="fc" id="L243">        Function function = Erc20ByteCode.owner();</span>
+
+<span class="fc" id="L245">        EthCall ethCall = web3j.ethCall(Transaction.createEthCallTransaction(addressQuery, this.contractAddress,</span>
+<span class="fc" id="L246">                FunctionEncoder.encode(function)), DefaultBlockParameterName.LATEST).send();</span>
+
+<span class="fc" id="L248">        return Decode.singleValueReturn(ethCall.getValue(), function.getOutputParameters(), String.class);</span>
+    }
+
+    @Override
+    public String getNetVersion() throws IOException {
+<span class="nc" id="L253">        return EthCoreUtils.getNetVersion(web3j);</span>
+    }
+
+    @Override
+    public void shutdown() {
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">        if (web3j != null)</span>
+<span class="fc" id="L259">            web3j.shutdown();</span>
+
+<span class="fc" id="L261">    }</span>
+
+    @Override
+    public String getContractValidationRules(String addressQuery) throws IOException {
+
+<span class="fc" id="L266">        Function function = Erc20ByteCode.getContractValidationRules();</span>
+
+<span class="fc" id="L268">        EthCall ethCall = web3j.ethCall(Transaction.createEthCallTransaction(addressQuery, this.contractAddress,</span>
+<span class="fc" id="L269">                FunctionEncoder.encode(function)), DefaultBlockParameterName.LATEST).send();</span>
+
+<span class="fc" id="L271">        return Decode.singleValueReturn(ethCall.getValue(), function.getOutputParameters(), String.class);</span>
+    }
+
+    @Override
+    public String setContractValidationRules(String privateKey, String addressContractRules, double factor)
+            throws IOException, TransactionException {
+
+<span class="fc" id="L278">        String encodedFunction = Erc20ByteCode.setContractValidationRules(addressContractRules);</span>
+
+<span class="fc" id="L280">        ResponseTransaction response = TransactionExecute.process(web3j, contractAddress, privateKey, encodedFunction,</span>
+                blockTime, factor);
+
+<span class="fc" id="L283">        return response.getEthSendTransaction().getResult();</span>
+    }
+
+    @Override
+    public String setProductIdentifier(String privateKey, String addressIdentifierProduct, double factor)
+            throws IOException, TransactionException {
+
+<span class="fc" id="L290">        String encodedFunction = Erc20ByteCode.setProductIdentifier(addressIdentifierProduct);</span>
+
+<span class="fc" id="L292">        ResponseTransaction response = TransactionExecute.process(web3j, contractAddress, privateKey, encodedFunction,</span>
+                blockTime, factor);
+
+<span class="fc" id="L295">        return response.getEthSendTransaction().getResult();</span>
+    }
+
+    @Override
+    public String burn(String privateKey, BigInteger amount, double factor)  throws IOException, TransactionException {
+<span class="fc" id="L300">        String encodedFunction = Erc20ByteCode.burn(amount);</span>
+
+<span class="fc" id="L302">        ResponseTransaction response = TransactionExecute.process(web3j, contractAddress, privateKey, encodedFunction,</span>
+                blockTime, factor);
+
+<span class="fc" id="L305">        return response.getEthSendTransaction().getResult();</span>
+    }
+
+    @Override
+    public String burnFrom(String privateKey, String account, BigInteger amount, double factor)  throws IOException, TransactionException {
+<span class="nc" id="L310">        String encodedFunction = Erc20ByteCode.burnFrom(account, amount);</span>
+
+<span class="nc" id="L312">        ResponseTransaction response = TransactionExecute.process(web3j, contractAddress, privateKey, encodedFunction,</span>
+                blockTime, factor);
+
+<span class="nc" id="L315">        return response.getEthSendTransaction().getResult();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

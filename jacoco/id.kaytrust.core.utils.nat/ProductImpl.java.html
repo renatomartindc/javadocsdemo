@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProductImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.nat</a> &gt; <span class="el_source">ProductImpl.java</span></div><h1>ProductImpl.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.nat;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.crypto.Credentials;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.JsonRpc2_0Web3j;
+import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.EthCall;
+import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.exceptions.TransactionException;
+import org.web3j.tx.TransactionManager;
+import org.web3j.tx.response.PollingTransactionReceiptProcessor;
+import org.web3j.tx.response.TransactionReceiptProcessor;
+import org.web3j.utils.Strings;
+
+import id.kaytrust.core.utils.misc.EthCoreUtils;
+import id.kaytrust.core.utils.nat.lib.Decode;
+import id.kaytrust.core.utils.nat.lib.HttpService;
+import id.kaytrust.core.utils.nat.lib.ProducType;
+import id.kaytrust.core.utils.nat.lib.ProductBean;
+import id.kaytrust.core.utils.nat.lib.RawTransactionManager;
+
+public class ProductImpl implements Product {
+
+    private Web3j web3j;
+    private String contractAddress;
+    private int blockTime;
+
+<span class="fc" id="L37">    public ProductImpl(String host, String token, String contractAddress, int blockTime) {</span>
+<span class="fc" id="L38">        HttpService httpService = new HttpService(host);</span>
+<span class="pc bpc" id="L39" title="1 of 2 branches missed.">        if (!Strings.isEmpty(token)) {</span>
+<span class="fc" id="L40">            Map&lt;String, String&gt; header = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L41">            header.put(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L42">            httpService.addHeaders(header);</span>
+        }
+<span class="fc" id="L44">        this.web3j = Web3j.build(httpService);</span>
+<span class="fc" id="L45">        this.contractAddress = contractAddress;</span>
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">        this.blockTime = blockTime == 0 ? JsonRpc2_0Web3j.DEFAULT_BLOCK_TIME : blockTime;</span>
+<span class="fc" id="L47">    }</span>
+
+    @Override
+    public ProductBean getProduct(String addressQuery, String addressProductIdentifier) throws IOException {
+<span class="fc" id="L51">        Function function = ProductByteCode.getProduct(addressProductIdentifier);</span>
+
+<span class="fc" id="L53">        EthCall ethCall = web3j.ethCall(Transaction.createEthCallTransaction(addressQuery, this.contractAddress,</span>
+<span class="fc" id="L54">                FunctionEncoder.encode(function)), DefaultBlockParameterName.LATEST).send();</span>
+
+<span class="fc" id="L56">        ProducType proType = Decode.singleValueReturn(ethCall.getValue(), function.getOutputParameters(),</span>
+                ProducType.class);
+
+<span class="fc" id="L59">        return new ProductBean(addressProductIdentifier, proType);</span>
+    }
+
+    @Override
+    public String addProduct(String privateKey, ProductBean product, double factor)
+            throws IOException, TransactionException {
+
+<span class="fc" id="L66">        BigInteger gasPrice = EthCoreUtils.getGasPrice(web3j);</span>
+
+<span class="fc" id="L68">        String encodedFunction = ProductByteCode.addProduct(product.getPrice(), product.getAddressIdentifier(),</span>
+<span class="fc" id="L69">                product.getRecipient(),product.getStock() , product.getEnabled());</span>
+<span class="fc" id="L70">        TransactionManager txManager = new RawTransactionManager(web3j, Credentials.create(privateKey), factor);</span>
+
+<span class="fc" id="L72">        EthSendTransaction response = txManager.sendTransaction(gasPrice, null, contractAddress, encodedFunction,</span>
+                BigInteger.ZERO);
+
+<span class="fc" id="L75">        TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(web3j, blockTime,</span>
+                TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+
+<span class="fc" id="L78">        TransactionReceipt receipt = receiptProcessor.waitForTransactionReceipt(response.getResult());</span>
+
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        if (receipt == null) {</span>
+<span class="nc" id="L81">            throw new TransactionException(GeneralNative.ERROR.RECEIPT_EMPTY.name() + &quot;:&quot; + response.getResult());</span>
+        }
+
+<span class="fc" id="L84">        return response.getResult();</span>
+    }
+
+    @Override
+    public String updateProduct(String privateKey, ProductBean product, double factor)
+            throws IOException, TransactionException {
+
+<span class="fc" id="L91">        BigInteger gasPrice = EthCoreUtils.getGasPrice(web3j);</span>
+
+<span class="fc" id="L93">        String encodedFunction = ProductByteCode.updateProduct(product.getPrice(), product.getAddressIdentifier(),</span>
+<span class="fc" id="L94">                product.getRecipient(),product.getStock() , product.getEnabled());</span>
+<span class="fc" id="L95">        TransactionManager txManager = new RawTransactionManager(web3j, Credentials.create(privateKey), factor);</span>
+
+<span class="fc" id="L97">        EthSendTransaction response = txManager.sendTransaction(gasPrice, null, contractAddress, encodedFunction,</span>
+                BigInteger.ZERO);
+
+<span class="fc" id="L100">        TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(web3j, blockTime,</span>
+                TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+
+<span class="fc" id="L103">        TransactionReceipt receipt = receiptProcessor.waitForTransactionReceipt(response.getResult());</span>
+
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">        if (receipt == null) {</span>
+<span class="nc" id="L106">            throw new TransactionException(GeneralNative.ERROR.RECEIPT_EMPTY.name() + &quot;:&quot; + response.getResult());</span>
+        }
+
+<span class="fc" id="L109">        return response.getResult();</span>
+    }
+
+    @Override
+    public String addLimitedProductMaintainer(String privateKey, String addressContract, double factor)
+            throws IOException, TransactionException {
+
+<span class="fc" id="L116">        BigInteger gasPrice = EthCoreUtils.getGasPrice(web3j);</span>
+
+<span class="fc" id="L118">        String encodedFunction = ProductByteCode.addLimitedProductMaintainer(addressContract);</span>
+<span class="fc" id="L119">        TransactionManager txManager = new RawTransactionManager(web3j, Credentials.create(privateKey), factor);</span>
+
+<span class="fc" id="L121">        EthSendTransaction response = txManager.sendTransaction(gasPrice, null, contractAddress, encodedFunction,</span>
+                BigInteger.ZERO);
+
+<span class="fc" id="L124">        TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(web3j, blockTime,</span>
+                TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+
+<span class="fc" id="L127">        TransactionReceipt receipt = receiptProcessor.waitForTransactionReceipt(response.getResult());</span>
+
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">        if (receipt == null) {</span>
+<span class="nc" id="L130">            throw new TransactionException(GeneralNative.ERROR.RECEIPT_EMPTY.name() + &quot;:&quot; + response.getResult());</span>
+        }
+
+<span class="fc" id="L133">        return response.getResult();</span>
+    }
+
+    @Override
+    public String getNetVersion() throws IOException {
+<span class="nc" id="L138">        return EthCoreUtils.getNetVersion(web3j);</span>
+    }
+
+    @Override
+    public void shutdown() {
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">        if (web3j != null)</span>
+<span class="fc" id="L144">            web3j.shutdown();</span>
+
+<span class="fc" id="L146">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

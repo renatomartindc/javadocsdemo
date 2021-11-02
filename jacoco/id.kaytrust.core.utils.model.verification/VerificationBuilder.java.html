@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VerificationBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">KayTrust Core SDK</a> &gt; <a href="index.source.html" class="el_package">id.kaytrust.core.utils.model.verification</a> &gt; <span class="el_source">VerificationBuilder.java</span></div><h1>VerificationBuilder.java</h1><pre class="source lang-java linenums">package id.kaytrust.core.utils.model.verification;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+public class VerificationBuilder {
+
+<span class="nc" id="L13">	VerificationBuilder(){}</span>
+
+	public static final String FORMAT_DATE_ISO = &quot;yyyy-MM-dd'T'HH:mm:ssXXX&quot;;
+<span class="fc" id="L16">	private static final String[] CONTEXT_CREDENTIAL = { &quot;https://www.w3.org/2018/credentials/v1&quot;,</span>
+			&quot;https://schema.org/&quot; };
+
+	public static &lt;T&gt; VerifiableCredential&lt;T&gt; build(T credentialSubject, String[] credentialType,
+			 Date issuanceDate,  Date expirationDate, String issuer,  String id) {
+
+<span class="fc" id="L22">		VerifiableCredential&lt;T&gt; verifiableCredential = new VerifiableCredential&lt;&gt;();</span>
+
+<span class="fc" id="L24">		verifiableCredential.setContext(CONTEXT_CREDENTIAL);</span>
+		
+<span class="fc" id="L26">		verifiableCredential.setType(credentialType);</span>
+
+<span class="fc" id="L28">		verifiableCredential.setCredentialSubject(credentialSubject);</span>
+
+<span class="fc" id="L30">		verifiableCredential.setExpirationDate(expirationDate);</span>
+
+<span class="fc" id="L32">		verifiableCredential.setId(id);</span>
+
+<span class="fc bfc" id="L34" title="All 2 branches covered.">		verifiableCredential.setIssuanceDate(issuanceDate != null ? issuanceDate : new Date());</span>
+
+<span class="fc" id="L36">		verifiableCredential.setIssuer(issuer);</span>
+
+<span class="fc" id="L38">		return verifiableCredential;</span>
+	}
+
+	public static String addParameter(String json, Map&lt;String, Object&gt; extra) throws JSONException {
+
+<span class="nc" id="L43">		JSONObject mainObject = new JSONObject(json);</span>
+
+<span class="nc" id="L45">		List&lt;String&gt; exclusiveId = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L46">		exclusiveId.add(&quot;id&quot;);</span>
+<span class="nc" id="L47">		exclusiveId.add(&quot;proof&quot;);</span>
+<span class="nc" id="L48">		exclusiveId.add(&quot;credetialSubject&quot;);</span>
+<span class="nc" id="L49">		exclusiveId.add(&quot;issuer&quot;);</span>
+<span class="nc" id="L50">		exclusiveId.add(&quot;type&quot;);</span>
+
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		for (Map.Entry&lt;String, Object&gt; entry : extra.entrySet()) {</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">			if (!(exclusiveId.contains(entry.getKey()))) {</span>
+<span class="nc" id="L54">				mainObject.put(entry.getKey(), entry.getValue());</span>
+			}
+<span class="nc" id="L56">		}</span>
+<span class="nc" id="L57">		return mainObject.toString();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>
